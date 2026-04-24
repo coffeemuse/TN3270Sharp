@@ -39,13 +39,13 @@ namespace TN3270Sharp;
 
 public class Screen
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public List<Field> Fields { get; set; }
     public (int row , int column) InitialCursorPosition { get; set; }
 
     public Screen()
     {
-        Fields = new List<Field>();
+        Fields = [];
         InitialCursorPosition = (1, 1);
     }
 
@@ -84,7 +84,7 @@ public class Screen
     /// <param name="highlight">highlight attribute</param>
     /// <returns></returns>
     public void AddText(int row, int column, string contents, bool intensity = false, Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
-        => AddText(row, column, null, contents, intensity, color, highlighting);
+        => AddText(row, column, string.Empty, contents, intensity, color, highlighting);
     
     /// <summary>
     /// Creates new field and adds the result to this screen.
@@ -150,7 +150,7 @@ public class Screen
     // licened under the MIT license.
     public byte[] BuildField(Field fld)
     {
-        var buffer = new List<byte>();
+        List<byte> buffer = [];
         if (fld.Color == Colors.DefaultColor && fld.Highlighting == Highlight.DefaultHighlight)
         {
             // We can use a simple SF
@@ -199,7 +199,7 @@ public class Screen
         return buffer.ToArray();
     }
 
-    public string GetFieldData(string fieldName)
+    public string? GetFieldData(string fieldName)
     {
         var field = Fields.FirstOrDefault(x => x.Name == fieldName);
 

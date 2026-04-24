@@ -39,7 +39,7 @@ public class Field
     public int Column { get; set; }
 
     // The text value to display on the screen
-    public string Contents { get; set; }
+    public string Contents { get; set; } = string.Empty;
 
     // Determine if the contents be edited by end-user
     public bool Write { get; set; }
@@ -60,7 +60,7 @@ public class Field
 
     // Name is the name of this field, which is used to get the user-entered
     // data. All writeable fields on a screen must have a unique name.
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public Field() 
     {

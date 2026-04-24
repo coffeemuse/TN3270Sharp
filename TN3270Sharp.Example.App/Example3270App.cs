@@ -93,8 +93,8 @@ namespace TN3270Sharp.Example.App
                             }
                             else
                             {
-                                screens[ProgramScreen.FormScreenInside].SetFieldValue("fname", fName);
-                                screens[ProgramScreen.FormScreenInside].SetFieldValue("lname", lName);
+                                screens[ProgramScreen.FormScreenInside].SetFieldValue("fname", fName!);
+                                screens[ProgramScreen.FormScreenInside].SetFieldValue("lname", lName!);
                                 tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreenInside], true, formScreenInsideAction);
                             }
                         }

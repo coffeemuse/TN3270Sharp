@@ -15,14 +15,14 @@ This project is still very early in development and is **not suitable** for use 
 TN3270Sharp is licensed under the MIT License which permits commercial use; modification; distribution, and private use.
 
 ## Requirements
-This should run on any machine support by Microsoft .NET 6.
+This should run on any machine support by Microsoft .NET 10.
 This includes:
 * Linux (x64, ARM32, ARM64) - This also includes Raspberry Pi 3 & 4.
 * macOS (x64, Apple Silicon)
 * Microsoft Windows (x86, x64)
 
 ## How to use
-* Install [.NET 6](https://dotnet.microsoft.com/download/), the latest LTS version.
+* Install [.NET 10](https://dotnet.microsoft.com/download/), the latest LTS version.
 * Clone the repo
 * Type the following in the shell
 
@@ -53,9 +53,12 @@ I want to thank [bencz](https://github.com/bencz) for major contribution, includ
 I also wish to thank [M4xAmmo](https://github.com/M4xAmmo) for contributions including: changable cursor position; factory methods to create fields; checking the terminals responses on negotiation instead of ignoring them; and some general code cleanup.
 
 ## Contributors
-* [roblthegreat](https://github.com/roblthegreat) 
+* [roblthegreat](https://github.com/roblthegreat)
 * [bencz](https://github.com/bencz)
 * [M4xAmmo](https://github.com/M4xAmmo)
+* [Dominik Downarowicz](https://github.com/downarowiczd)
+* [coffeemuse](https://github.com/coffeemuse)
+
 
 ## Reference Material
 * [racingmars/go3270](https://github.com/racingmars/go3270)

@@ -38,31 +38,31 @@ namespace TN3270Sharp;
 public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
 {
     private Telnet Telnet;
-    private Dictionary<AID, Action> AidActions;
+    private Dictionary<AID, Action?> AidActions;
 
     public Tn3270ConnectionHandler(TcpClient tcpClient)
     {
         Telnet = new Telnet(tcpClient, tcpClient.GetStream());
-        AidActions = new Dictionary<AID, Action>();
+        AidActions = [];
         ResetAidActions();
     }
 
     //public byte[] GetBufferBytes() => BufferBytes;
     //public int GetTotalBytesReadFromBuffer() => TotalBytesReadFromBuffer;
 
-    public void ShowScreen(Screen screen) 
+    public void ShowScreen(Screen screen)
         => ShowScreen(screen, true, null, null);
 
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions) 
+    public void ShowScreen(Screen screen, bool executePredefinedAidActions)
         => ShowScreen(screen, executePredefinedAidActions, null, null);
 
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action beforeScreenRenderAction) 
+    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction)
         => ShowScreen(screen, executePredefinedAidActions, beforeScreenRenderAction, null);
 
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action<AID> screenBufferProcess) 
+    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action<AID>? screenBufferProcess)
         => ShowScreen(screen, executePredefinedAidActions, null, screenBufferProcess);
 
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action beforeScreenRenderAction, Action<AID> screenBufferProcess)
+    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction, Action<AID>? screenBufferProcess)
     {
         beforeScreenRenderAction?.Invoke();
 
@@ -74,9 +74,9 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
             {
                 var recvdAID = (AID)bufferBytes[0];
 
-                if (executePredefinedAidActions && AidActions.ContainsKey(recvdAID) && AidActions[recvdAID] != null)
+                if (executePredefinedAidActions && AidActions.TryGetValue(recvdAID, out var action))
                 {
-                    AidActions[recvdAID]();
+                    action?.Invoke();
                 }
 
                 var response = new Response(bufferBytes);

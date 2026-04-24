@@ -35,7 +35,7 @@ namespace TN3270Sharp;
 public static class Ebcdic
 {
     private static Encoding AsciiEncoding { get; } = Encoding.ASCII;
-    private static Encoding EbcdicEncoding { get; set; }
+    private static Encoding EbcdicEncoding { get; set; } = null!;
 
     public static void SetEbcdicEncoding(string encoding)
     {

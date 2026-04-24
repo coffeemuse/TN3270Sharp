@@ -67,8 +67,8 @@ public class Response
     public void ParseFieldsScreen(Screen screen)
     {
         var inField = false;
-        var fieldBytes = new List<byte>();
-        Tuple<int, int> fieldPosition = null;
+        List<byte> fieldBytes = [];
+        Tuple<int, int>? fieldPosition = null;
 
         for (var i = 0; i < BufferBytes.Length; i++)
         {

@@ -79,7 +79,7 @@ public class Telnet : IDisposable
         ExpectFromStream(TelnetCommands.IAC, TelnetCommands.SB, TelnetCommands.TERMINAL_TYPE, 0x0);
         _ = ReadFromStream();
         // buffer now contains the terminal type (RFC1340) followed by IAC SE
-        var terminalType = new List<byte>();
+        List<byte> terminalType = [];
         for (int i = 0; i < BufferBytes.Length; i++)
         {
             if (BufferBytes[i] != TelnetCommands.IAC || BufferBytes[i + 1] != TelnetCommands.SE)
