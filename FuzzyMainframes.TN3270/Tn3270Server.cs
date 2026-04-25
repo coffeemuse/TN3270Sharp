@@ -35,23 +35,76 @@ using System.Text;
 
 namespace FuzzyMainframes.TN3270;
 
+/// <summary>
+///     TCP listener that accepts TN3270 client connections, performs the
+///     telnet-level negotiation, and hands each connection to a user-supplied
+///     callback for the per-turn screen logic. One thread per connection;
+///     blocking I/O inside the connection thread.
+/// </summary>
+/// <remarks>
+///     <para>
+///         The server registers <see cref="CodePagesEncodingProvider" /> in its
+///         constructor so that IBM-prefixed EBCDIC code pages
+///         (<c>IBM01047</c>, <c>IBM037</c>, …) resolve through
+///         <see cref="Encoding.GetEncoding(string)" />. Each accepted connection
+///         is given a freshly-constructed <see cref="ICodepage" /> from the
+///         factory, so concurrent clients on different code pages don't
+///         interfere.
+///     </para>
+///     <para>
+///         Per-connection behaviour lives in <see cref="ITn3270ConnectionHandler" />.
+///     </para>
+/// </remarks>
 public class Tn3270Server
 {
+    /// <summary>
+    ///     Bind to <c>0.0.0.0:<paramref name="port" /></c> with the default
+    ///     CP1047 (<c>IBM01047</c>) EBCDIC code page.
+    /// </summary>
+    /// <param name="port">TCP port to listen on (typically 3270 or 23).</param>
     public Tn3270Server(int port)
         : this("0.0.0.0", port)
     {
     }
 
+    /// <summary>
+    ///     Bind to a specific IP address with the default CP1047
+    ///     (<c>IBM01047</c>) EBCDIC code page.
+    /// </summary>
+    /// <param name="ipAddress">IPv4 address to bind to (e.g. <c>"127.0.0.1"</c>).</param>
+    /// <param name="port">TCP port to listen on.</param>
     public Tn3270Server(string ipAddress, int port)
         : this(ipAddress, port, "IBM01047")
     {
     }
 
+    /// <summary>
+    ///     Bind to a specific IP address with a named EBCDIC code page resolved
+    ///     by <see cref="Encoding.GetEncoding(string)" />.
+    /// </summary>
+    /// <param name="ipAddress">IPv4 address to bind to.</param>
+    /// <param name="port">TCP port to listen on.</param>
+    /// <param name="defaultEbcdicEncoding">
+    ///     EBCDIC code page name (e.g. <c>"IBM01047"</c> for CP1047 or
+    ///     <c>"IBM037"</c> for CP037). Each new connection wraps this in a
+    ///     fresh <see cref="BclCodepage" />.
+    /// </param>
     public Tn3270Server(string ipAddress, int port, string defaultEbcdicEncoding)
         : this(ipAddress, port, () => new BclCodepage(defaultEbcdicEncoding))
     {
     }
 
+    /// <summary>
+    ///     Bind to a specific IP address with a custom <see cref="ICodepage" />
+    ///     factory. Use this overload when you need a non-<see cref="BclCodepage" />
+    ///     implementation (e.g. a hand-rolled translation table).
+    /// </summary>
+    /// <param name="ipAddress">IPv4 address to bind to.</param>
+    /// <param name="port">TCP port to listen on.</param>
+    /// <param name="codepageFactory">
+    ///     Factory invoked once per accepted connection to produce that
+    ///     connection's <see cref="ICodepage" />.
+    /// </param>
     public Tn3270Server(string ipAddress, int port, Func<ICodepage> codepageFactory)
     {
         IpAddress = ipAddress;
@@ -71,6 +124,33 @@ public class Tn3270Server
     /// </summary>
     public Action<string>? Logger { get; init; }
 
+    /// <summary>
+    ///     Accept connections in a loop until <paramref name="breakCondition" />
+    ///     returns <c>true</c>. Each accepted client gets its own thread,
+    ///     telnet-negotiates, then runs <paramref name="handleConnectionAction" />
+    ///     to completion before the thread exits.
+    /// </summary>
+    /// <param name="breakCondition">
+    ///     Polled before each <c>AcceptTcpClient</c>; return <c>true</c> to stop
+    ///     accepting new connections and shut the listener down. Already-running
+    ///     connection threads keep running until their handler returns.
+    /// </param>
+    /// <param name="whenHasNewConnection">
+    ///     Invoked at the start of each connection thread (after accept, before
+    ///     telnet negotiation). Useful for incrementing connection counters or
+    ///     logging.
+    /// </param>
+    /// <param name="whenConnectionIsClosed">
+    ///     Invoked at the end of each connection thread, after
+    ///     <paramref name="handleConnectionAction" /> returns and the underlying
+    ///     <see cref="ITn3270ConnectionHandler" /> has been disposed.
+    /// </param>
+    /// <param name="handleConnectionAction">
+    ///     The per-connection app logic. Inside this callback you typically
+    ///     register AID handlers via <see cref="ITn3270ConnectionHandler.SetAidAction" />
+    ///     and drive a sequence of <see cref="ITn3270ConnectionHandler.ShowScreen" />
+    ///     calls. Returning ends the connection.
+    /// </param>
     public void StartListener(Func<bool> breakCondition, Action whenHasNewConnection, Action whenConnectionIsClosed,
         Action<ITn3270ConnectionHandler> handleConnectionAction)
     {

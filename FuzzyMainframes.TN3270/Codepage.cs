@@ -59,17 +59,30 @@ public sealed class BclCodepage : ICodepage
     private static readonly Encoding AsciiEncoding = Encoding.ASCII;
     private readonly Encoding _ebcdicEncoding;
 
+    /// <summary>
+    ///     Construct a codec backed by the named .NET <see cref="Encoding" />.
+    /// </summary>
+    /// <param name="encodingName">
+    ///     Encoding name passed straight to <see cref="Encoding.GetEncoding(string)" /> —
+    ///     typically <c>"IBM01047"</c> (CP1047) or <c>"IBM037"</c> (CP037).
+    ///     <see cref="Tn3270Server" /> registers
+    ///     <see cref="System.Text.CodePagesEncodingProvider" /> so the BCL
+    ///     recognizes the IBM-prefixed names.
+    /// </param>
     public BclCodepage(string encodingName)
     {
         Id = encodingName;
         _ebcdicEncoding = Encoding.GetEncoding(encodingName);
     }
 
+    /// <inheritdoc />
     public string Id { get; }
 
+    /// <inheritdoc />
     public byte[] Encode(string ascii) =>
         Encoding.Convert(AsciiEncoding, _ebcdicEncoding, AsciiEncoding.GetBytes(ascii));
 
+    /// <inheritdoc />
     public string Decode(byte[] ebcdic) =>
         AsciiEncoding.GetString(Encoding.Convert(_ebcdicEncoding, AsciiEncoding, ebcdic));
 }

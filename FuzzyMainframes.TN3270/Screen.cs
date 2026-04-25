@@ -37,29 +37,64 @@
 
 namespace FuzzyMainframes.TN3270;
 
+/// <summary>
+///     UI model for one 3270 screen: an ordered list of <see cref="Field" />
+///     elements plus the initial cursor position. Built up via
+///     <see cref="AddText(int, int, string, bool, Colors, Highlight)" />,
+///     <see cref="AddInput(int, int, string, bool, bool, bool, bool)" />, and
+///     <see cref="AddEOF" /> helpers, then handed to
+///     <see cref="ITn3270ConnectionHandler.ShowScreen" />.
+/// </summary>
+/// <remarks>
+///     Row/column values are 1-based with <c>(1, 1)</c> at the upper-left;
+///     the default 24x80 screen has rows 1–24 and columns 1–80. Field
+///     <c>(Row, Column)</c> coordinates point at the field's attribute byte;
+///     visible content lands at <c>(Row, Column + 1)</c>.
+/// </remarks>
 public class Screen
 {
+    /// <summary>
+    ///     Creates an empty screen with the cursor positioned at <c>(1, 1)</c>.
+    /// </summary>
     public Screen()
     {
         Fields = [];
         InitialCursorPosition = (1, 1);
     }
 
+    /// <summary>
+    ///     Optional human-readable name for this screen. Not transmitted on the
+    ///     wire; useful for routing and logging.
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Ordered list of fields that make up this screen. The order matters —
+    ///     it determines the sequence of 3270 <c>SF</c>/<c>SFE</c> orders
+    ///     emitted on the wire and the tab order on the terminal.
+    /// </summary>
     public List<Field> Fields { get; set; }
+
+    /// <summary>
+    ///     1-based <c>(row, column)</c> at which the cursor lands when the
+    ///     screen is rendered. Overridable per call via
+    ///     <see cref="ScreenOpts.CursorRow" /> / <see cref="ScreenOpts.CursorCol" />.
+    /// </summary>
     public (int row, int column) InitialCursorPosition { get; set; }
 
     /// <summary>
-    ///     Creates new field and adds the result to this screen.
+    ///     Add a named protected (display-only) text field to this screen.
     /// </summary>
-    /// <param name="row">x position, counted top to bottom starting with 1</param>
-    /// <param name="column">y position, counted left to right starting with 1</param>
-    /// <param name="name">name</param>
-    /// <param name="contents">contents to be displayed</param>
-    /// <param name="intensity">Should text be display with intensity (true/false)</param>
-    /// <param name="color">text color</param>
-    /// <param name="highlight">highlight attribute</param>
-    /// <returns></returns>
+    /// <param name="row">1-based row of the field's attribute byte (1–24 on a default screen).</param>
+    /// <param name="column">
+    ///     1-based column of the field's attribute byte (1–80 on a default
+    ///     screen). The visible text starts at column + 1.
+    /// </param>
+    /// <param name="name">Optional name; pass <see cref="string.Empty" /> for unnamed display labels.</param>
+    /// <param name="contents">Text to display.</param>
+    /// <param name="intensity">When true, render the text with high intensity.</param>
+    /// <param name="color">Foreground color; <see cref="Colors.DefaultColor" /> defers to the terminal.</param>
+    /// <param name="highlighting">Highlight attribute (blink, reverse video, underscore).</param>
     public void AddText(int row, int column, string name, string contents, bool intensity = false,
         Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
     {
@@ -76,15 +111,17 @@ public class Screen
     }
 
     /// <summary>
-    ///     Creates new field and adds the result to this screen.
+    ///     Add an unnamed protected (display-only) text field to this screen.
     /// </summary>
-    /// <param name="row">x position, counted top to bottom starting with 1</param>
-    /// <param name="column">y position, counted left to right starting with 1</param>
-    /// <param name="contents">contents to be displayed</param>
-    /// <param name="intensity">Should text be display with intensity (true/false)</param>
-    /// <param name="color">text color</param>
-    /// <param name="highlight">highlight attribute</param>
-    /// <returns></returns>
+    /// <param name="row">1-based row of the field's attribute byte.</param>
+    /// <param name="column">
+    ///     1-based column of the field's attribute byte. The visible text
+    ///     starts at column + 1.
+    /// </param>
+    /// <param name="contents">Text to display.</param>
+    /// <param name="intensity">When true, render the text with high intensity.</param>
+    /// <param name="color">Foreground color; <see cref="Colors.DefaultColor" /> defers to the terminal.</param>
+    /// <param name="highlighting">Highlight attribute (blink, reverse video, underscore).</param>
     public void AddText(int row, int column, string contents, bool intensity = false,
         Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
     {
@@ -92,16 +129,27 @@ public class Screen
     }
 
     /// <summary>
-    ///     Creates new field and adds the result to this screen.
+    ///     Add a named writeable input field to this screen. Use the overload
+    ///     that takes a <c>length</c> when you also want to cap the field's
+    ///     length with a trailing <see cref="AddEOF" />.
     /// </summary>
-    /// <param name="row">x position, counted top to bottom starting with 1</param>
-    /// <param name="column">y position, counted left to right starting with 1</param>
-    /// <param name="name">name</param>
-    /// <param name="hidden">text is hidden (i.e., password)</param>
-    /// <param name="write">is input field writable (true/false)</param>
-    /// <param name="underscore">should the input field be underscored (true/false)</param>
-    /// <param name="numericOnly">allows only numeric input</param>
-    /// <returns></returns>
+    /// <param name="row">1-based row of the field's attribute byte.</param>
+    /// <param name="column">
+    ///     1-based column of the field's attribute byte. The user-typed input
+    ///     area starts at column + 1.
+    /// </param>
+    /// <param name="name">
+    ///     Field name. Required-unique across writeable fields on the screen;
+    ///     <see cref="GetFieldData" /> and <see cref="SetFieldValue(string, string)" />
+    ///     look fields up by this name.
+    /// </param>
+    /// <param name="hidden">When true, mask the input (e.g. for passwords).</param>
+    /// <param name="write">
+    ///     When false the field is rendered as protected — useful when you want
+    ///     to reserve a name for a field whose writeability you'll toggle later.
+    /// </param>
+    /// <param name="underscore">When true, render the input area with the underscore highlight.</param>
+    /// <param name="numericOnly">When true, hint to the terminal that only digits are accepted.</param>
     public void AddInput(int row, int column, string name, bool hidden = false, bool write = true,
         bool underscore = true, bool numericOnly = false)
     {
@@ -120,18 +168,21 @@ public class Screen
     }
 
     /// <summary>
-    ///     Creates new field field and adds the result to this screen.
-    ///     Then creates and adds a new EOF field to ensure the specified length.
+    ///     Add a named writeable input field with a fixed maximum length. Emits
+    ///     the input field followed by a trailing <see cref="AddEOF" /> at
+    ///     <c>(row, column + length + 1)</c> to cap the input area.
     /// </summary>
-    /// <param name="row">x position, counted top to bottom starting with 1</param>
-    /// <param name="column">y position, counted left to right starting with 1</param>
-    /// <param name="length">length of the desired field in characters</param>
-    /// <param name="name">name</param>
-    /// <param name="hidden">text is hidden (i.e., password)</param>
-    /// <param name="write">is input field writable (true/false)</param>
-    /// <param name="underscore">should the input field be underscored (true/false)</param>
-    /// <param name="numericOnly">allows only numeric input</param>
-    /// <returns></returns>
+    /// <param name="row">1-based row of the field's attribute byte.</param>
+    /// <param name="column">
+    ///     1-based column of the field's attribute byte. The user-typed input
+    ///     area starts at column + 1.
+    /// </param>
+    /// <param name="length">Maximum length of the input area in characters.</param>
+    /// <param name="name">Required-unique field name (see overload without <paramref name="length" />).</param>
+    /// <param name="hidden">When true, mask the input.</param>
+    /// <param name="write">When false the field is rendered as protected.</param>
+    /// <param name="underscore">When true, render with the underscore highlight.</param>
+    /// <param name="numericOnly">When true, hint to the terminal that only digits are accepted.</param>
     public void AddInput(int row, int column, int length, string name, bool hidden = false, bool write = true,
         bool underscore = true, bool numericOnly = false)
     {
@@ -140,12 +191,12 @@ public class Screen
     }
 
     /// <summary>
-    ///     Creates new field and adds the result to this screen. <br />
-    ///     This is intended to reduce the length of an input field.
+    ///     Add a bare attribute byte at the given position. Typically used to
+    ///     terminate a preceding writeable input field — the next attribute
+    ///     byte ends the previous field's input area.
     /// </summary>
-    /// <param name="row">x position, counted top to bottom starting with 1</param>
-    /// <param name="column">y position, counted left to right starting with 1</param>
-    /// <returns></returns>
+    /// <param name="row">1-based row of the attribute byte.</param>
+    /// <param name="column">1-based column of the attribute byte.</param>
     public void AddEOF(int row, int column)
     {
         Fields.Add(new Field
@@ -221,6 +272,13 @@ public class Screen
         return buffer.ToArray();
     }
 
+    /// <summary>
+    ///     Look up a field by name and return its current <see cref="Field.Contents" />,
+    ///     or <c>null</c> if no field with that name exists. After
+    ///     <see cref="ITn3270ConnectionHandler.ShowScreen" /> returns, this is
+    ///     how callers retrieve user-entered values.
+    /// </summary>
+    /// <param name="fieldName">Name of the field to look up.</param>
     public string? GetFieldData(string fieldName)
     {
         var field = Fields.FirstOrDefault(x => x.Name == fieldName);
@@ -228,6 +286,14 @@ public class Screen
         return field?.Contents;
     }
 
+    /// <summary>
+    ///     Set a field's contents by 1-based attribute-byte coordinates. The
+    ///     value is trimmed unless the field has <see cref="Field.KeepSpaces" />
+    ///     set; no-op if no field exists at <c>(row, col)</c>.
+    /// </summary>
+    /// <param name="row">1-based row of the field's attribute byte.</param>
+    /// <param name="col">1-based column of the field's attribute byte.</param>
+    /// <param name="data">New contents.</param>
     public void SetFieldValue(int row, int col, string data)
     {
         var field = Fields.FirstOrDefault(x => x.Row == row && x.Column == col);
@@ -237,6 +303,12 @@ public class Screen
         field.Contents = field.KeepSpaces ? data : data.Trim();
     }
 
+    /// <summary>
+    ///     Set a field's contents by name. The value is stored verbatim
+    ///     (no trim); no-op if no field has that name.
+    /// </summary>
+    /// <param name="fieldName">Name of the field to update.</param>
+    /// <param name="fieldData">New contents.</param>
     public void SetFieldValue(string fieldName, string fieldData)
     {
         var field = Fields.FirstOrDefault(x => x.Name == fieldName);
@@ -246,6 +318,10 @@ public class Screen
         field.Contents = fieldData;
     }
 
+    /// <summary>
+    ///     Clear a field's contents by name. No-op if no field has that name.
+    /// </summary>
+    /// <param name="fieldName">Name of the field to clear.</param>
     public void ClearFieldValue(string fieldName)
     {
         var field = Fields.FirstOrDefault(x => x.Name == fieldName);

@@ -8,6 +8,7 @@
         <RootNamespace>FuzzyMainframes.TN3270</RootNamespace>
         <AssemblyName>FuzzyMainframes.TN3270</AssemblyName>
         <PackageId>FuzzyMainframes.TN3270</PackageId>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

@@ -31,6 +31,12 @@
 
 namespace FuzzyMainframes.TN3270;
 
+/// <summary>
+///     Per-connection contract handed to the user's
+///     <see cref="Tn3270Server.StartListener" /> callback. Drives a single
+///     client through any number of render/response turns and exposes the
+///     hooks for closing the socket and pre-registering AID handlers.
+/// </summary>
 public interface ITn3270ConnectionHandler
 {
     /// <summary>
@@ -44,7 +50,24 @@ public interface ITn3270ConnectionHandler
     /// </summary>
     void ShowScreen(Screen screen, ScreenOpts? opts = null);
 
+    /// <summary>
+    ///     Pre-register an action to run whenever <paramref name="aidCommand" />
+    ///     arrives in a <see cref="ShowScreen" /> response. Use this for keys
+    ///     that have the same meaning across most screens (e.g. <c>PF3</c> as
+    ///     "exit"). Pre-registered actions fire before any per-call callback
+    ///     supplied via <see cref="ScreenOpts.ScreenBufferProcess" />, and
+    ///     can be suppressed for a single turn by setting
+    ///     <see cref="ScreenOpts.ExecutePredefinedAidActions" /> to <c>false</c>.
+    /// </summary>
+    /// <param name="aidCommand">AID key to bind to.</param>
+    /// <param name="action">Action invoked when that AID arrives.</param>
     void SetAidAction(AID aidCommand, Action action);
 
+    /// <summary>
+    ///     Close the underlying TCP connection. Any in-flight
+    ///     <see cref="ShowScreen" /> read returns, the connection thread
+    ///     unwinds out of the user's <c>handleConnectionAction</c>, and the
+    ///     server's <c>whenConnectionIsClosed</c> callback fires.
+    /// </summary>
     void CloseConnection();
 }
