@@ -6,7 +6,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2020, 2021, 20022 by Robert J. Lawrence (roblthegreat) and other
+ * Copyright (c) 2020-2026 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,8 +28,6 @@
  * SOFTWARE.
  *
  */
-
-using System;
 
 namespace TN3270Sharp.Example.App;
 
