@@ -38,11 +38,13 @@ namespace TN3270Sharp;
 public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
 {
     private Telnet Telnet;
+    private ICodepage Codepage;
     private Dictionary<AID, Action?> AidActions;
 
-    public Tn3270ConnectionHandler(TcpClient tcpClient)
+    public Tn3270ConnectionHandler(TcpClient tcpClient, ICodepage codepage, Action<string>? logger = null)
     {
-        Telnet = new Telnet(tcpClient, tcpClient.GetStream());
+        Codepage = codepage;
+        Telnet = new Telnet(tcpClient, tcpClient.GetStream(), codepage, logger);
         AidActions = [];
         ResetAidActions();
     }
@@ -79,7 +81,7 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
                     action?.Invoke();
                 }
 
-                var response = new Response(bufferBytes);
+                var response = new Response(bufferBytes, Codepage);
                 response.ParseFieldsScreen(screen);
 
                 screenBufferProcess?.Invoke(recvdAID);

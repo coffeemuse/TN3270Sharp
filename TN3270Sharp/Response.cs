@@ -34,16 +34,25 @@ namespace TN3270Sharp;
 public class Response
 {
     public AID ActionID { get; set; }
+
+    /// <summary>1-based row of the cursor at the time the AID key was pressed.</summary>
     public int Row { get; set; }
+
+    /// <summary>1-based column of the cursor at the time the AID key was pressed.</summary>
     public int Column { get; set; }
+
     public Dictionary<byte[], string> Map { get; set; } = new Dictionary<byte[], string>();
     public byte[] BufferBytes { get; }
 
-    public Response(byte[] bufferBytes) 
+    private readonly ICodepage _codepage;
+
+    public Response(byte[] bufferBytes, ICodepage codepage)
     {
         BufferBytes = bufferBytes;
+        _codepage = codepage;
 
         ReadAction();
+        ReadCursorPosition();
     }
 
     private void ReadAction()
@@ -51,24 +60,23 @@ public class Response
         ActionID = (AID)BufferBytes[0];
     }
 
-    private Tuple<int, int> ReadPosition(int row, int col)
+    private void ReadCursorPosition()
     {
-        var hi = Utils.IODecodes[row] << 6;
-        var lo = Utils.IODecodes[col];
+        // Bytes 1 and 2 of the inbound stream carry the cursor's 12-bit buffer
+        // address at AID time. Short frames (some PA / Clear variants) skip them.
+        if (BufferBytes.Length < 3)
+            return;
 
-        var address = hi | lo;
-
-        var nRow = (address % 80);
-        var nCol = ((address - nRow) / 80);
-
-        return new Tuple<int, int>(nCol, nRow);
+        var (row, col) = Utils.DecodePosition(BufferBytes[1], BufferBytes[2]);
+        Row = row;
+        Column = col;
     }
 
     public void ParseFieldsScreen(Screen screen)
     {
         var inField = false;
         List<byte> fieldBytes = [];
-        Tuple<int, int>? fieldPosition = null;
+        (int row, int col)? fieldPosition = null;
 
         for (var i = 0; i < BufferBytes.Length; i++)
         {
@@ -80,30 +88,31 @@ public class Response
 
                 if (BufferBytes[i + 1] == 0xef && fieldPosition != null)
                 {
-                    var data = Ebcdic.EBCDICtoASCII(fieldBytes.ToArray());
-
-                    //Console.WriteLine("Field {0}/{1}: {2}", fieldPosition.Item1, fieldPosition.Item2, data);
-                    screen.SetFieldValue(fieldPosition.Item1 + 1, fieldPosition.Item2, data);
+                    var data = _codepage.Decode(fieldBytes.ToArray());
+                    screen.SetFieldValue(fieldPosition.Value.row, fieldPosition.Value.col, data);
 
                     fieldBytes.Clear();
 
                     return;
                 }
             }
-            if(b == 0x11) 
+            if(b == 0x11)
             {
                 if (inField && fieldPosition != null)
                 {
-                    var data = Ebcdic.EBCDICtoASCII(fieldBytes.ToArray());
-
-                    //Console.WriteLine("Field {0}/{1}: {2}", fieldPosition.Item1, fieldPosition.Item2, data);
-                    screen.SetFieldValue(fieldPosition.Item1 + 1, fieldPosition.Item2, data);
+                    var data = _codepage.Decode(fieldBytes.ToArray());
+                    screen.SetFieldValue(fieldPosition.Value.row, fieldPosition.Value.col, data);
                 }
 
                 fieldBytes.Clear();
                 inField = true;
 
-                fieldPosition = ReadPosition(BufferBytes[++i], BufferBytes[++i]);
+                // The SBA in a Read-Modified response points to the first
+                // character of the input area, one position past the field's
+                // attribute byte. Fields are registered at the attribute byte
+                // position, so step back one to find the matching Field.
+                var inputAddr = (Utils.IODecodes[BufferBytes[++i]] << 6) | Utils.IODecodes[BufferBytes[++i]];
+                fieldPosition = Utils.DecodeAddress(inputAddr - 1);
 
                 continue;
             }

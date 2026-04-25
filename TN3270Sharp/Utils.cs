@@ -83,4 +83,27 @@ public static class Utils
         result[1] = IOCodes[lo];
         return result;
     }
+
+    /// <summary>
+    /// Inverse of <see cref="GetPosition"/>: turns the two buffer-address control
+    /// characters returned by the terminal into a 1-based (row, col) pair, per the
+    /// project's row/col convention (see CLAUDE.md).
+    /// </summary>
+    public static (int row, int col) DecodePosition(byte hi, byte lo)
+        => DecodeAddress((IODecodes[hi] << 6) | IODecodes[lo]);
+
+    /// <summary>
+    /// Translate a raw 12-bit buffer address (0..1919 for a 24x80 screen) to a
+    /// 1-based (row, col) pair. Negative addresses wrap to the previous position
+    /// on the screen — useful for callers that need the position immediately
+    /// before a known address.
+    /// </summary>
+    public static (int row, int col) DecodeAddress(int address)
+    {
+        const int rows = 24;
+        const int cols = 80;
+        const int total = rows * cols;
+        var a = ((address % total) + total) % total;
+        return (a / cols + 1, a % cols + 1);
+    }
 }

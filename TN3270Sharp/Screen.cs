@@ -212,7 +212,7 @@ public class Screen
         if (field == null)
             return;
 
-        field.Contents = data;
+        field.Contents = field.KeepSpaces ? data : data.Trim();
     }
 
     public void SetFieldValue(string fieldName, string fieldData)

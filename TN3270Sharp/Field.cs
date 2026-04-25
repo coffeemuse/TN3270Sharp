@@ -38,11 +38,18 @@ public class Field
     // Column (on the screen) where the field attribute character begins.  integer between 1 and 80
     public int Column { get; set; }
 
-    // The text value to display on the screen
+    // The text value to display on the screen.
+    // On responses from the terminal, this is the user-entered value with
+    // surrounding whitespace trimmed unless KeepSpaces is set.
     public string Contents { get; set; } = string.Empty;
 
     // Determine if the contents be edited by end-user
     public bool Write { get; set; }
+
+    // When true, response values for this field are stored verbatim rather
+    // than trimmed. The 3270 buffer pads to the field length with spaces, so
+    // most callers want the default (trimmed) behavior.
+    public bool KeepSpaces { get; set; }
 
     // Intense indicates this field should be displayed with high intensity.
     public bool Intensity { get; set; }

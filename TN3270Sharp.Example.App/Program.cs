@@ -41,7 +41,7 @@ namespace TN3270Sharp.Example.App
             //Console.WriteLine("Version 0.0.1");
             //Console.WriteLine("Copyright 2020 by Robert J. Lawrence (roblthegreat)");
             //Console.WriteLine("Edited 2021 by Alexandre Bencz (bencz)");
-            //Console.WriteLine("https//github.com/roblthegreat/TN3270Sharp");
+            //Console.WriteLine("https://github.com/FuzzyMainframes/TN3270Sharp");
             Console.WriteLine("TN3270Sharp Demo Server started and listening on 0.0.0.0 port 3270");
             Console.WriteLine("Control+C to exit...\n\n");
 

@@ -41,6 +41,9 @@ public class Telnet : IDisposable
     protected int TotalBytesReadFromBuffer { get; set; }
     protected bool ConnectionClosed { get; private set; }
 
+    private readonly ICodepage _codepage;
+    private readonly Action<string>? _logger;
+
     private enum TelnetState
     {
         Normal = 0,
@@ -48,10 +51,12 @@ public class Telnet : IDisposable
         SubNegotiation = 2
     }
 
-    public Telnet(TcpClient tcpClient, Stream stream)
+    public Telnet(TcpClient tcpClient, Stream stream, ICodepage codepage, Action<string>? logger = null)
     {
         TcpClient = tcpClient;
         Stream = stream;
+        _codepage = codepage;
+        _logger = logger;
 
         BufferBytes = new byte[256];
         TotalBytesReadFromBuffer = 0;
@@ -115,12 +120,25 @@ public class Telnet : IDisposable
         _ = ReadFromStream();
     }
 
-    protected void ExpectFromStream(params byte[] data)
+    protected void ExpectFromStream(params byte[] expected)
     {
-        var result = new byte[data.Length];
-        _ = Stream.Read(result, 0, result.Length);
-        if (data.Equals(result))
-            throw new Exception();
+        var actual = new byte[expected.Length];
+        var n = Stream.Read(actual, 0, actual.Length);
+        if (n == expected.Length && expected.AsSpan().SequenceEqual(actual.AsSpan(0, n)))
+            return;
+
+        _logger?.Invoke($"telnet negotiation: expected {Hex(expected)}, got {Hex(actual.AsSpan(0, n))}");
+    }
+
+    private static string Hex(ReadOnlySpan<byte> data)
+    {
+        var sb = new System.Text.StringBuilder(data.Length * 3);
+        for (var i = 0; i < data.Length; i++)
+        {
+            if (i > 0) sb.Append(' ');
+            sb.Append(data[i].ToString("x2"));
+        }
+        return sb.ToString();
     }
     protected int ReadFromStream() => Stream.Read(BufferBytes, 0, BufferBytes.Length);
     protected void WriteToStream(params byte[] data) => Stream.Write(data);
@@ -154,7 +172,7 @@ public class Telnet : IDisposable
             }
 
             if (!string.IsNullOrEmpty(content))
-                WriteToStream(Ebcdic.ASCIItoEBCDIC(content));
+                WriteToStream(_codepage.Encode(content));
         }
         DataStream.SBA(Stream, row, col);
         DataStream.IC(Stream);

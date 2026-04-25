@@ -164,6 +164,8 @@ namespace TN3270Sharp.Example.App
             FormScreen.AddText(9,7,"ENTER", true);
             FormScreen.AddText(9,13,"to submit your name.");
             FormScreen.AddText(11,1,"errormsg", "",true, Colors.Red);
+            //FormScreen.AddInput(12, 40, 1, "test");
+            //FormScreen.AddEOF(12, 41);
             FormScreen.AddText(23, 1, PFKeys);
             FormScreen.InitialCursorPosition = (5, 21);
 
