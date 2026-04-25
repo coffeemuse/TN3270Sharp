@@ -43,7 +43,9 @@ public enum ControlChars
     RA = 0x3c,
     EUA = 0x12,
     WCCdefault = 0xc3,
-    EraseWrite = 0xf5
+    WCCnoReset = 0xc2,
+    EraseWrite = 0xf5,
+    Write = 0xf1
 }
 
 // Action ID 

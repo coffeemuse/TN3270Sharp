@@ -39,6 +39,7 @@ public class Telnet : IDisposable
 {
     private readonly ICodepage _codepage;
     private readonly Action<string>? _logger;
+    private readonly List<byte> _readAccumulator = [];
 
     public Telnet(TcpClient tcpClient, Stream stream, ICodepage codepage, Action<string>? logger = null)
     {
@@ -152,17 +153,65 @@ public class Telnet : IDisposable
     protected void WriteToStream(params byte[] data) => Stream.Write(data);
     
 
+    // Reads the inbound stream and dispatches <paramref name="action"/> exactly
+    // once with the next complete logical 3270 record (terminated by IAC EOR,
+    // 0xff 0xef), then returns. The record passed to the callback is a freshly-
+    // allocated byte[] sized to the record itself, EOR trailer included. TCP
+    // segmentation can split a single record across multiple Stream.Read
+    // returns, and a single Stream.Read can contain bytes from the next record;
+    // both cases are handled by the instance-level accumulator. The caller
+    // (typically Tn3270ConnectionHandler.ShowScreen) calls Read again for each
+    // subsequent AID.
     public void Read(Action<byte[]> action)
     {
-        while (!ConnectionClosed && (TotalBytesReadFromBuffer = ReadFromStream()) != 0) action(BufferBytes);
+        while (!ConnectionClosed)
+        {
+            if (TryExtractRecord(_readAccumulator, out var record))
+            {
+                action(record);
+                return;
+            }
+
+            TotalBytesReadFromBuffer = ReadFromStream();
+            if (TotalBytesReadFromBuffer == 0)
+                return;
+
+            for (var i = 0; i < TotalBytesReadFromBuffer; i++)
+                _readAccumulator.Add(BufferBytes[i]);
+        }
+    }
+
+    private static bool TryExtractRecord(List<byte> accumulator, out byte[] record)
+    {
+        for (var i = 0; i + 1 < accumulator.Count; i++)
+        {
+            if (accumulator[i] != 0xff || accumulator[i + 1] != 0xef)
+                continue;
+
+            var length = i + 2;
+            record = accumulator.GetRange(0, length).ToArray();
+            accumulator.RemoveRange(0, length);
+            return true;
+        }
+
+        record = [];
+        return false;
     }
 
     public void SendScreen(Screen screen) => SendScreen(screen, screen.InitialCursorPosition.row, screen.InitialCursorPosition.column);
 
-    public void SendScreen(Screen screen, int row, int col)
+    public void SendScreen(Screen screen, int row, int col, bool noClear = false)
     {
-        DataStream.EraseWrite(Stream);
-        WriteToStream((byte)ControlChars.WCCdefault);
+        if (noClear)
+        {
+            DataStream.Write(Stream);
+            WriteToStream((byte)ControlChars.WCCnoReset);
+        }
+        else
+        {
+            DataStream.EraseWrite(Stream);
+            WriteToStream((byte)ControlChars.WCCdefault);
+        }
 
         foreach (var fld in screen.Fields)
         {
@@ -180,8 +229,13 @@ public class Telnet : IDisposable
                 WriteToStream(_codepage.Encode(content));
         }
 
-        DataStream.SBA(Stream, row, col);
-        DataStream.IC(Stream);
+        // Non-clearing updates deliberately leave the cursor where the user
+        // put it — go3270's showScreenInternal does the same.
+        if (!noClear)
+        {
+            DataStream.SBA(Stream, row, col);
+            DataStream.IC(Stream);
+        }
 
         WriteToStream(TelnetCommands.IAC, 0xef);
     }

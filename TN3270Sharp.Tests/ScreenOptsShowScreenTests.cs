@@ -90,11 +90,9 @@ public class ScreenOptsShowScreenTests
 
         // PostSendCallback runs synchronously in ShowScreen right after
         // Telnet.SendScreen returns; ScreenBufferProcess runs inside the
-        // Telnet.Read callback after the AID arrives. Stamp only the first
-        // invocation of each — Telnet.Read may dispatch its action across
-        // multiple network reads, so ScreenBufferProcess can fire more than
-        // once. The ordering between the first PostSendCallback and the first
-        // ScreenBufferProcess is what the contract guarantees.
+        // Telnet.Read callback after the AID arrives. Telnet.Read now
+        // dispatches its action exactly once per logical 3270 record, so
+        // each callback fires exactly once.
         var counter = 0;
         var postSendOrder = 0;
         var bufferProcessOrder = 0;
@@ -110,16 +108,8 @@ public class ScreenOptsShowScreenTests
                 handler.SetAidAction(AID.PF3, handler.CloseConnection);
                 handler.ShowScreen(screen, new ScreenOpts
                 {
-                    PostSendCallback = _ =>
-                    {
-                        if (postSendOrder == 0)
-                            postSendOrder = Interlocked.Increment(ref counter);
-                    },
-                    ScreenBufferProcess = _ =>
-                    {
-                        if (bufferProcessOrder == 0)
-                            bufferProcessOrder = Interlocked.Increment(ref counter);
-                    },
+                    PostSendCallback = _ => postSendOrder = Interlocked.Increment(ref counter),
+                    ScreenBufferProcess = _ => bufferProcessOrder = Interlocked.Increment(ref counter),
                 });
                 done.Set();
             },
@@ -193,6 +183,67 @@ public class ScreenOptsShowScreenTests
             testBody: s3270 =>
             {
                 Assert.Equal((10, 20), s3270.Cursor);
+                s3270.Send("PF(3)");
+            });
+    }
+
+    [Fact]
+    public void NoClear_PreservesDisplayedContent_OfFieldsAbsentFromRefresh()
+    {
+        if (!ShouldRun) { Console.WriteLine(SkipMessage); return; }
+
+        // Demonstrates the canonical NoClear use case (mirrors go3270's
+        // example3): the server sends a refresh screen that omits the user's
+        // input field. Because the wire stream uses Write (0xf1) instead of
+        // EraseWrite (0xf5), the client buffer is overlaid rather than
+        // cleared, and content at positions not touched by an SBA stays put.
+        // This pins down the visual non-disturbance behavior end-to-end.
+        var firstAidArrived = new ManualResetEventSlim(false);
+
+        RunWithServer(
+            handlerBody: handler =>
+            {
+                // Initial screen: alpha input at (5, 9), label and status at
+                // other rows. Cursor lands inside alpha's input area, which
+                // starts at (5, 10) since column 9 is the attribute byte.
+                var s1 = new Screen { InitialCursorPosition = (5, 10) };
+                s1.AddText(1, 1, "noclear preservation", intensity: true);
+                s1.AddInput(5, 9, 20, "alpha");
+                s1.AddText(23, 1, "before", intensity: false);
+
+                // Refresh: only an updated row-23 message. No alpha — its
+                // wire position (5, 9..29) is therefore untouched.
+                var s2 = new Screen();
+                s2.AddText(23, 1, "after ", intensity: false);
+
+                handler.SetAidAction(AID.PF3, handler.CloseConnection);
+
+                handler.ShowScreen(s1, new ScreenOpts
+                {
+                    ScreenBufferProcess = _ => firstAidArrived.Set(),
+                });
+
+                // After the first AID, refresh row 23 without clearing.
+                // NoResponse=false so the call blocks for the next AID
+                // (PF3 below), letting the test inspect the client buffer
+                // before the connection unwinds.
+                handler.ShowScreen(s2, new ScreenOpts { NoClear = true });
+            },
+            testBody: s3270 =>
+            {
+                s3270.Send("String(\"ROBERT\")");
+                s3270.Send("Enter");
+
+                Assert.True(firstAidArrived.Wait(TimeSpan.FromSeconds(5)),
+                    "Server did not process the first AID.");
+
+                // Wait until the keyboard unlocks — that's the signal the
+                // NoClear refresh has been applied on the client side.
+                s3270.Send("Wait(Unlock)");
+
+                Assert.Contains("ROBERT", s3270.AsciiRow(5));
+                Assert.Contains("after",  s3270.AsciiRow(23));
+
                 s3270.Send("PF(3)");
             });
     }

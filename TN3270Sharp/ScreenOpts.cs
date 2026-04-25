@@ -38,8 +38,7 @@ namespace TN3270Sharp;
 /// </summary>
 /// <remarks>
 ///     All cursor coordinates use the project-wide 1-based convention (see
-///     <c>CLAUDE.md</c>). NoClear support is tracked under Tier 3.2 and not
-///     present here yet.
+///     <c>CLAUDE.md</c>).
 /// </remarks>
 public sealed record class ScreenOpts
 {
@@ -92,4 +91,19 @@ public sealed record class ScreenOpts
     ///     parsed into the screen and any registered AID handler has run.
     /// </summary>
     public Action<AID>? ScreenBufferProcess { get; init; }
+
+    /// <summary>
+    ///     If true, send the screen using the non-clearing 3270 Write order
+    ///     (command byte 0xf1, WCC 0xc2). Modified-data tags on writeable
+    ///     fields are preserved, so user keystrokes between updates survive
+    ///     the next AID response. The trailing SBA/IC cursor reposition is
+    ///     also skipped, so the cursor stays where the user left it;
+    ///     <see cref="CursorRow" /> and <see cref="CursorCol" /> are ignored
+    ///     when <see cref="NoClear" /> is true.
+    /// </summary>
+    /// <remarks>
+    ///     The default <c>false</c> emits the clearing EraseWrite order
+    ///     (0xf5) with WCC 0xc3, which resets MDTs and repositions the cursor.
+    /// </remarks>
+    public bool NoClear { get; init; }
 }

@@ -38,6 +38,11 @@ public static class DataStream
         stream.Write(new[] { (byte)ControlChars.EraseWrite });
     }
 
+    public static void Write(Stream stream)
+    {
+        stream.Write(new[] { (byte)ControlChars.Write });
+    }
+
     public static void IC(Stream stream)
     {
         stream.Write(new[] { (byte)ControlChars.IC });

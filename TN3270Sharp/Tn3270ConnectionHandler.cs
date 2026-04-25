@@ -61,7 +61,7 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
         opts.BeforeScreenRenderAction?.Invoke();
 
         var (cursorRow, cursorCol) = ResolveCursor(screen, opts);
-        Telnet.SendScreen(screen, cursorRow, cursorCol);
+        Telnet.SendScreen(screen, cursorRow, cursorCol, opts.NoClear);
 
         opts.PostSendCallback?.Invoke(opts.CallbackData);
 
