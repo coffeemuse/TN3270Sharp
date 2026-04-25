@@ -1,24 +1,24 @@
 ﻿/*
  * This file is part of https://github.com/FuzzyMainframes/TN3270Sharp
  *
- * Portions of this code may have been adapted or originated from another MIT 
+ * Portions of this code may have been adapted or originated from another MIT
  * licensed project and will be explicitly noted in the comments as needed.
- * 
+ *
  * MIT License
- * 
+ *
  * Copyright (c) 2020, 2021, 20022 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 /* Thanks go to Alexandre Bencz (bencz) for the major re-write of the connection handling*/
@@ -37,9 +37,9 @@ namespace TN3270Sharp;
 
 public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
 {
-    private Telnet Telnet;
-    private ICodepage Codepage;
-    private Dictionary<AID, Action?> AidActions;
+    private readonly Dictionary<AID, Action?> AidActions;
+    private readonly ICodepage Codepage;
+    private readonly Telnet Telnet;
 
     public Tn3270ConnectionHandler(TcpClient tcpClient, ICodepage codepage, Action<string>? logger = null)
     {
@@ -47,6 +47,11 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
         Telnet = new Telnet(tcpClient, tcpClient.GetStream(), codepage, logger);
         AidActions = [];
         ResetAidActions();
+    }
+
+    public void Dispose()
+    {
+        Telnet.Dispose();
     }
 
     //public byte[] GetBufferBytes() => BufferBytes;
@@ -64,7 +69,8 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
     public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action<AID>? screenBufferProcess)
         => ShowScreen(screen, executePredefinedAidActions, null, screenBufferProcess);
 
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction, Action<AID>? screenBufferProcess)
+    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction,
+        Action<AID>? screenBufferProcess)
     {
         beforeScreenRenderAction?.Invoke();
 
@@ -76,10 +82,7 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
             {
                 var recvdAID = (AID)bufferBytes[0];
 
-                if (executePredefinedAidActions && AidActions.TryGetValue(recvdAID, out var action))
-                {
-                    action?.Invoke();
-                }
+                if (executePredefinedAidActions && AidActions.TryGetValue(recvdAID, out var action)) action?.Invoke();
 
                 var response = new Response(bufferBytes, Codepage);
                 response.ParseFieldsScreen(screen);
@@ -94,17 +97,24 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
         }
     }
 
-    public void SetAidAction(AID aidCommand, Action action) => AidActions[aidCommand] = action;
+    public void SetAidAction(AID aidCommand, Action action)
+    {
+        AidActions[aidCommand] = action;
+    }
 
-    public void NegotiateTelnet() => Telnet.Negotiate();
+    public void CloseConnection()
+    {
+        Telnet.CloseConnection();
+    }
+
+    public void NegotiateTelnet()
+    {
+        Telnet.Negotiate();
+    }
 
     public void ResetAidActions()
     {
         foreach (var aid in Enum.GetValues(typeof(AID)).Cast<AID>())
             AidActions[aid] = null;
     }
-
-    public void CloseConnection() => Telnet.CloseConnection();
-
-    public void Dispose() => Telnet.Dispose();
 }

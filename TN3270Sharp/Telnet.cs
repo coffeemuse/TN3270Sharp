@@ -1,24 +1,24 @@
 ﻿/*
  * This file is part of https://github.com/FuzzyMainframes/TN3270Sharp
  *
- * Portions of this code may have been adapted or originated from another MIT 
+ * Portions of this code may have been adapted or originated from another MIT
  * licensed project and will be explicitly noted in the comments as needed.
- * 
+ *
  * MIT License
- * 
+ *
  * Copyright (c) 2020, 2021, 20022 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,30 +26,18 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 using System.Net.Sockets;
+using System.Text;
 
 namespace TN3270Sharp;
 
 public class Telnet : IDisposable
 {
-    protected TcpClient TcpClient { get; }
-    protected Stream Stream { get; }
-    protected byte[] BufferBytes { get; set; }
-    protected int TotalBytesReadFromBuffer { get; set; }
-    protected bool ConnectionClosed { get; private set; }
-
     private readonly ICodepage _codepage;
     private readonly Action<string>? _logger;
-
-    private enum TelnetState
-    {
-        Normal = 0,
-        Command = 1,
-        SubNegotiation = 2
-    }
 
     public Telnet(TcpClient tcpClient, Stream stream, ICodepage codepage, Action<string>? logger = null)
     {
@@ -61,6 +49,17 @@ public class Telnet : IDisposable
         BufferBytes = new byte[256];
         TotalBytesReadFromBuffer = 0;
         ConnectionClosed = false;
+    }
+
+    protected TcpClient TcpClient { get; }
+    protected Stream Stream { get; }
+    protected byte[] BufferBytes { get; set; }
+    protected int TotalBytesReadFromBuffer { get; set; }
+    protected bool ConnectionClosed { get; private set; }
+
+    public void Dispose()
+    {
+        CloseConnection();
     }
 
     public void CloseConnection()
@@ -80,20 +79,22 @@ public class Telnet : IDisposable
         WriteToStream(TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.TERMINAL_TYPE);
         ExpectFromStream(TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.TERMINAL_TYPE);
 
-        WriteToStream(TelnetCommands.IAC, TelnetCommands.SB, TelnetCommands.TERMINAL_TYPE, 0x01, TelnetCommands.IAC, TelnetCommands.SE);
+        WriteToStream(TelnetCommands.IAC, TelnetCommands.SB, TelnetCommands.TERMINAL_TYPE, 0x01, TelnetCommands.IAC,
+            TelnetCommands.SE);
         ExpectFromStream(TelnetCommands.IAC, TelnetCommands.SB, TelnetCommands.TERMINAL_TYPE, 0x0);
         _ = ReadFromStream();
         // buffer now contains the terminal type (RFC1340) followed by IAC SE
         List<byte> terminalType = [];
-        for (int i = 0; i < BufferBytes.Length; i++)
+        for (var i = 0; i < BufferBytes.Length; i++)
         {
             if (BufferBytes[i] != TelnetCommands.IAC || BufferBytes[i + 1] != TelnetCommands.SE)
                 continue;
-            for (int j = 0; j < i; j++)        
+            for (var j = 0; j < i; j++)
                 terminalType.Add(BufferBytes[j]);
             break;
         }
-        var terminalTypeString = System.Text.Encoding.ASCII.GetString(terminalType.ToArray());
+
+        var terminalTypeString = Encoding.ASCII.GetString(terminalType.ToArray());
 
         WriteToStream(TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.EOR);
         ExpectFromStream(TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.EOR);
@@ -101,13 +102,16 @@ public class Telnet : IDisposable
         WriteToStream(TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.BINARY);
         ExpectFromStream(TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.BINARY);
 
-        WriteToStream(TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.EOR, TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.BINARY);
-        ExpectFromStream(TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.EOR, TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.BINARY);
+        WriteToStream(TelnetCommands.IAC, TelnetCommands.WILL, TelnetCommands.EOR, TelnetCommands.IAC,
+            TelnetCommands.WILL, TelnetCommands.BINARY);
+        ExpectFromStream(TelnetCommands.IAC, TelnetCommands.DO, TelnetCommands.EOR, TelnetCommands.IAC,
+            TelnetCommands.DO, TelnetCommands.BINARY);
     }
 
     public void UnNegotiate()
     {
-        WriteToStream(TelnetCommands.IAC, TelnetCommands.WONT, TelnetCommands.IAC, TelnetCommands.WONT, TelnetCommands.BINARY);
+        WriteToStream(TelnetCommands.IAC, TelnetCommands.WONT, TelnetCommands.IAC, TelnetCommands.WONT,
+            TelnetCommands.BINARY);
         _ = ReadFromStream();
 
         WriteToStream(TelnetCommands.IAC, TelnetCommands.DONT, TelnetCommands.BINARY);
@@ -132,27 +136,27 @@ public class Telnet : IDisposable
 
     private static string Hex(ReadOnlySpan<byte> data)
     {
-        var sb = new System.Text.StringBuilder(data.Length * 3);
+        var sb = new StringBuilder(data.Length * 3);
         for (var i = 0; i < data.Length; i++)
         {
             if (i > 0) sb.Append(' ');
             sb.Append(data[i].ToString("x2"));
         }
+
         return sb.ToString();
     }
+
     protected int ReadFromStream() => Stream.Read(BufferBytes, 0, BufferBytes.Length);
+
     protected void WriteToStream(params byte[] data) => Stream.Write(data);
+    
 
     public void Read(Action<byte[]> action)
     {
-        while (ConnectionClosed == false && (TotalBytesReadFromBuffer = ReadFromStream()) != 0)
-        {
-            action(BufferBytes);
-        }
+        while (!ConnectionClosed && (TotalBytesReadFromBuffer = ReadFromStream()) != 0) action(BufferBytes);
     }
 
-    public void SendScreen(Screen screen) 
-        => SendScreen(screen, screen.InitialCursorPosition.row, screen.InitialCursorPosition.column);
+    public void SendScreen(Screen screen) => SendScreen(screen, screen.InitialCursorPosition.row, screen.InitialCursorPosition.column);
 
     public void SendScreen(Screen screen, int row, int col)
     {
@@ -174,11 +178,17 @@ public class Telnet : IDisposable
             if (!string.IsNullOrEmpty(content))
                 WriteToStream(_codepage.Encode(content));
         }
+
         DataStream.SBA(Stream, row, col);
         DataStream.IC(Stream);
 
         WriteToStream(TelnetCommands.IAC, 0xef);
     }
 
-    public void Dispose() => CloseConnection();
+    private enum TelnetState
+    {
+        Normal = 0,
+        Command = 1,
+        SubNegotiation = 2
+    }
 }

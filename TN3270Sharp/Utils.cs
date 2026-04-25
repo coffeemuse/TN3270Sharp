@@ -1,24 +1,24 @@
 ﻿/*
  * This file is part of https://github.com/roblthegreat/TN3270Sharp
  *
- * Portions of this code may have been adapted or originated from another MIT 
+ * Portions of this code may have been adapted or originated from another MIT
  * licensed project and will be explicitly noted in the comments as needed.
- * 
+ *
  * MIT License
- * 
+ *
  * Copyright (c) 2020-2021 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 namespace TN3270Sharp;
@@ -38,7 +38,8 @@ public static class Utils
     // Copyright 2020 by Matthew R. Wilson, licensed under the MIT license. 
     // codes are the 3270 control character I/O codes, pre-computed as provided
     // at http://www.tommysprinkle.com/mvs/P3270/iocodes.htm
-    public static byte[] IOCodes = {
+    public static byte[] IOCodes =
+    {
         0x40, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8,
         0xc9, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50, 0xd1, 0xd2, 0xd3, 0xd4,
         0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f, 0x60,
@@ -51,7 +52,8 @@ public static class Utils
     // Adapted from https://github.com/racingmars/go3270/blob/master/util.go
     // Copyright 2020 by Matthew R. Wilson, licensed under the MIT license.
     // decodes is the inverse of the above table; -1 is used in invalid positions
-    public static int[] IODecodes = {
+    public static int[] IODecodes =
+    {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -85,25 +87,25 @@ public static class Utils
     }
 
     /// <summary>
-    /// Inverse of <see cref="GetPosition"/>: turns the two buffer-address control
-    /// characters returned by the terminal into a 1-based (row, col) pair, per the
-    /// project's row/col convention (see CLAUDE.md).
+    ///     Inverse of <see cref="GetPosition" />: turns the two buffer-address control
+    ///     characters returned by the terminal into a 1-based (row, col) pair, per the
+    ///     project's row/col convention (see CLAUDE.md).
     /// </summary>
-    public static (int row, int col) DecodePosition(byte hi, byte lo)
-        => DecodeAddress((IODecodes[hi] << 6) | IODecodes[lo]);
+    public static (int row, int col) DecodePosition(byte hi, byte lo) =>
+        DecodeAddress((IODecodes[hi] << 6) | IODecodes[lo]);
 
     /// <summary>
-    /// Translate a raw 12-bit buffer address (0..1919 for a 24x80 screen) to a
-    /// 1-based (row, col) pair. Negative addresses wrap to the previous position
-    /// on the screen — useful for callers that need the position immediately
-    /// before a known address.
+    ///     Translate a raw 12-bit buffer address (0..1919 for a 24x80 screen) to a
+    ///     1-based (row, col) pair. Negative addresses wrap to the previous position
+    ///     on the screen — useful for callers that need the position immediately
+    ///     before a known address.
     /// </summary>
     public static (int row, int col) DecodeAddress(int address)
     {
         const int rows = 24;
         const int cols = 80;
         const int total = rows * cols;
-        var a = ((address % total) + total) % total;
+        var a = (address % total + total) % total;
         return (a / cols + 1, a % cols + 1);
     }
 }

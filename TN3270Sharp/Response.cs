@@ -1,24 +1,24 @@
 ﻿/*
  * This file is part of https://github.com/FuzzyMainframes/TN3270Sharp
  *
- * Portions of this code may have been adapted or originated from another MIT 
+ * Portions of this code may have been adapted or originated from another MIT
  * licensed project and will be explicitly noted in the comments as needed.
- * 
+ *
  * MIT License
- * 
+ *
  * Copyright (c) 2020, 2021, 20022 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,24 +26,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 namespace TN3270Sharp;
 
 public class Response
 {
-    public AID ActionID { get; set; }
-
-    /// <summary>1-based row of the cursor at the time the AID key was pressed.</summary>
-    public int Row { get; set; }
-
-    /// <summary>1-based column of the cursor at the time the AID key was pressed.</summary>
-    public int Column { get; set; }
-
-    public Dictionary<byte[], string> Map { get; set; } = new Dictionary<byte[], string>();
-    public byte[] BufferBytes { get; }
-
     private readonly ICodepage _codepage;
 
     public Response(byte[] bufferBytes, ICodepage codepage)
@@ -54,6 +43,17 @@ public class Response
         ReadAction();
         ReadCursorPosition();
     }
+
+    public AID ActionID { get; set; }
+
+    /// <summary>1-based row of the cursor at the time the AID key was pressed.</summary>
+    public int Row { get; set; }
+
+    /// <summary>1-based column of the cursor at the time the AID key was pressed.</summary>
+    public int Column { get; set; }
+
+    public Dictionary<byte[], string> Map { get; set; } = new();
+    public byte[] BufferBytes { get; }
 
     private void ReadAction()
     {
@@ -96,7 +96,8 @@ public class Response
                     return;
                 }
             }
-            if(b == 0x11)
+
+            if (b == 0x11)
             {
                 if (inField && fieldPosition != null)
                 {
@@ -116,6 +117,7 @@ public class Response
 
                 continue;
             }
+
             if (!inField)
                 continue;
 

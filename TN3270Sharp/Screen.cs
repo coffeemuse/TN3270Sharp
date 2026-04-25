@@ -1,24 +1,24 @@
 ﻿/*
  * This file is part of https://github.com/FuzzyMainframes/TN3270Sharp
  *
- * Portions of this code may have been adapted or originated from another MIT 
+ * Portions of this code may have been adapted or originated from another MIT
  * licensed project and will be explicitly noted in the comments as needed.
- * 
+ *
  * MIT License
- * 
+ *
  * Copyright (c) 2020, 2021, 20022 by Robert J. Lawrence (roblthegreat) and other
  * TN3270Sharp contributors.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,31 +26,31 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 
 
 /*
  * This file includes several helper methods added by M4xAmmo to make adding fields
  * a but more user friendly. Thanks!
-*/
+ */
 
 namespace TN3270Sharp;
 
 public class Screen
 {
-    public string Name { get; set; } = string.Empty;
-    public List<Field> Fields { get; set; }
-    public (int row , int column) InitialCursorPosition { get; set; }
-
     public Screen()
     {
         Fields = [];
         InitialCursorPosition = (1, 1);
     }
 
+    public string Name { get; set; } = string.Empty;
+    public List<Field> Fields { get; set; }
+    public (int row, int column) InitialCursorPosition { get; set; }
+
     /// <summary>
-    /// Creates new field and adds the result to this screen.
+    ///     Creates new field and adds the result to this screen.
     /// </summary>
     /// <param name="row">x position, counted top to bottom starting with 1</param>
     /// <param name="column">y position, counted left to right starting with 1</param>
@@ -60,9 +60,10 @@ public class Screen
     /// <param name="color">text color</param>
     /// <param name="highlight">highlight attribute</param>
     /// <returns></returns>
-
-    public void AddText(int row, int column, string name, string contents, bool intensity = false, Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
-        => Fields.Add(new Field
+    public void AddText(int row, int column, string name, string contents, bool intensity = false,
+        Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
+    {
+        Fields.Add(new Field
         {
             Column = column,
             Row = row,
@@ -70,11 +71,12 @@ public class Screen
             Contents = contents,
             Intensity = intensity,
             Highlighting = highlighting,
-            Color = color,
+            Color = color
         });
-    
+    }
+
     /// <summary>
-    /// Creates new field and adds the result to this screen.
+    ///     Creates new field and adds the result to this screen.
     /// </summary>
     /// <param name="row">x position, counted top to bottom starting with 1</param>
     /// <param name="column">y position, counted left to right starting with 1</param>
@@ -83,11 +85,14 @@ public class Screen
     /// <param name="color">text color</param>
     /// <param name="highlight">highlight attribute</param>
     /// <returns></returns>
-    public void AddText(int row, int column, string contents, bool intensity = false, Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
-        => AddText(row, column, string.Empty, contents, intensity, color, highlighting);
-    
+    public void AddText(int row, int column, string contents, bool intensity = false,
+        Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
+    {
+        AddText(row, column, string.Empty, contents, intensity, color, highlighting);
+    }
+
     /// <summary>
-    /// Creates new field and adds the result to this screen.
+    ///     Creates new field and adds the result to this screen.
     /// </summary>
     /// <param name="row">x position, counted top to bottom starting with 1</param>
     /// <param name="column">y position, counted left to right starting with 1</param>
@@ -97,23 +102,26 @@ public class Screen
     /// <param name="underscore">should the input field be underscored (true/false)</param>
     /// <param name="numericOnly">allows only numeric input</param>
     /// <returns></returns>
-        public void AddInput(int row, int column, string name, bool hidden = false, bool write = true, bool underscore = true, bool numericOnly = false)
-        => Fields.Add(new Field
+    public void AddInput(int row, int column, string name, bool hidden = false, bool write = true,
+        bool underscore = true, bool numericOnly = false)
+    {
+        Fields.Add(new Field
         {
             Column = column,
             Row = row,
             Name = name,
             Write = write,
             Highlighting = underscore
-            ? Highlight.Underscore
-            : Highlight.DefaultHighlight,
+                ? Highlight.Underscore
+                : Highlight.DefaultHighlight,
             Hidden = hidden,
-            NumericOnly = numericOnly,
+            NumericOnly = numericOnly
         });
+    }
 
     /// <summary>
-    /// Creates new field field and adds the result to this screen.
-    /// Then creates and adds a new EOF field to ensure the specified length.
+    ///     Creates new field field and adds the result to this screen.
+    ///     Then creates and adds a new EOF field to ensure the specified length.
     /// </summary>
     /// <param name="row">x position, counted top to bottom starting with 1</param>
     /// <param name="column">y position, counted left to right starting with 1</param>
@@ -132,17 +140,20 @@ public class Screen
     }
 
     /// <summary>
-    /// Creates new field and adds the result to this screen. <br/>
-    /// This is intended to reduce the length of an input field.
+    ///     Creates new field and adds the result to this screen. <br />
+    ///     This is intended to reduce the length of an input field.
     /// </summary>
     /// <param name="row">x position, counted top to bottom starting with 1</param>
     /// <param name="column">y position, counted left to right starting with 1</param>
     /// <returns></returns>
-    public void AddEOF(int row, int column) => Fields.Add(new Field
+    public void AddEOF(int row, int column)
     {
-        Column = column,
-        Row = row,
-    });
+        Fields.Add(new Field
+        {
+            Column = column,
+            Row = row
+        });
+    }
 
     // Adapted from https://github.com/racingmars/go3270/blob/master/screen.go
     // Copyright 2020 by Matthew R. Wilson, licensed under the MIT license.
@@ -168,7 +179,7 @@ public class Screen
                 (numericBit ? AttribChar.Numeric : AttribChar.Alpha) |
                 (fld.Intensity ? AttribChar.Intensity : AttribChar.Normal) |
                 (fld.Hidden ? AttribChar.Hidden : AttribChar.Normal)
-                ));
+            ));
             return buffer.ToArray();
         }
 
@@ -191,7 +202,7 @@ public class Screen
             (numericBit ? AttribChar.Numeric : AttribChar.Alpha) |
             (fld.Intensity ? AttribChar.Intensity : AttribChar.Normal) |
             (fld.Hidden ? AttribChar.Hidden : AttribChar.Normal)
-            ));
+        ));
 
         // Highlighting Attribute
         if (fld.Highlighting != Highlight.DefaultHighlight)
@@ -206,6 +217,7 @@ public class Screen
             buffer.Add(0x42);
             buffer.Add((byte)fld.Color);
         }
+
         return buffer.ToArray();
     }
 

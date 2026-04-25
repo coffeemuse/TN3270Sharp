@@ -34,8 +34,8 @@ using System.Text;
 namespace TN3270Sharp;
 
 /// <summary>
-/// Translates between the wire EBCDIC bytes used by the 3270 datastream and the
-/// ASCII strings used by application code. One instance per connection.
+///     Translates between the wire EBCDIC bytes used by the 3270 datastream and the
+///     ASCII strings used by application code. One instance per connection.
 /// </summary>
 public interface ICodepage
 {
@@ -50,9 +50,9 @@ public interface ICodepage
 }
 
 /// <summary>
-/// Default <see cref="ICodepage"/> implementation that wraps a .NET
-/// <see cref="Encoding"/> resolved by name. Suitable for any EBCDIC code page
-/// supplied by <c>System.Text.Encoding.CodePages</c>.
+///     Default <see cref="ICodepage" /> implementation that wraps a .NET
+///     <see cref="Encoding" /> resolved by name. Suitable for any EBCDIC code page
+///     supplied by <c>System.Text.Encoding.CodePages</c>.
 /// </summary>
 public sealed class BclCodepage : ICodepage
 {
@@ -67,9 +67,9 @@ public sealed class BclCodepage : ICodepage
 
     public string Id { get; }
 
-    public byte[] Encode(string ascii)
-        => Encoding.Convert(AsciiEncoding, _ebcdicEncoding, AsciiEncoding.GetBytes(ascii));
+    public byte[] Encode(string ascii) =>
+        Encoding.Convert(AsciiEncoding, _ebcdicEncoding, AsciiEncoding.GetBytes(ascii));
 
-    public string Decode(byte[] ebcdic)
-        => AsciiEncoding.GetString(Encoding.Convert(_ebcdicEncoding, AsciiEncoding, ebcdic));
+    public string Decode(byte[] ebcdic) =>
+        AsciiEncoding.GetString(Encoding.Convert(_ebcdicEncoding, AsciiEncoding, ebcdic));
 }

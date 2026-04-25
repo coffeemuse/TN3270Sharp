@@ -37,16 +37,6 @@ namespace TN3270Sharp;
 
 public class Tn3270Server
 {
-    private string IpAddress { get; set; }
-    private int Port { get; set; }
-    private Func<ICodepage> CodepageFactory { get; }
-
-    /// <summary>
-    /// Optional callback invoked with diagnostic messages (currently used for
-    /// telnet-negotiation mismatches). When null, diagnostics are silently dropped.
-    /// </summary>
-    public Action<string>? Logger { get; init; }
-
     public Tn3270Server(int port)
         : this("0.0.0.0", port)
     {
@@ -71,7 +61,18 @@ public class Tn3270Server
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
-    public void StartListener(Func<bool> breakCondition, Action whenHasNewConnection, Action whenConnectionIsClosed, Action<ITn3270ConnectionHandler> handleConnectionAction)
+    private string IpAddress { get; }
+    private int Port { get; }
+    private Func<ICodepage> CodepageFactory { get; }
+
+    /// <summary>
+    ///     Optional callback invoked with diagnostic messages (currently used for
+    ///     telnet-negotiation mismatches). When null, diagnostics are silently dropped.
+    /// </summary>
+    public Action<string>? Logger { get; init; }
+
+    public void StartListener(Func<bool> breakCondition, Action whenHasNewConnection, Action whenConnectionIsClosed,
+        Action<ITn3270ConnectionHandler> handleConnectionAction)
     {
         var server = new TcpListener(IPAddress.Parse(IpAddress), Port);
         server.Start();
