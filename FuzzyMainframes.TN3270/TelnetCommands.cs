@@ -32,7 +32,7 @@
 
 namespace FuzzyMainframes.TN3270;
 
-public static class TelnetCommands
+internal static class TelnetCommands
 {
     public const byte BINARY = 0;
     public const byte TERMINAL_TYPE = 0x18;

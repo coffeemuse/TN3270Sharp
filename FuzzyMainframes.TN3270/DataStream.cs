@@ -31,7 +31,7 @@
 
 namespace FuzzyMainframes.TN3270;
 
-public static class DataStream
+internal static class DataStream
 {
     public static void EraseWrite(Stream stream)
     {

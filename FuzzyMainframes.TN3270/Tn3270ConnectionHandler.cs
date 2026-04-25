@@ -35,7 +35,7 @@ using System.Net.Sockets;
 
 namespace FuzzyMainframes.TN3270;
 
-public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
+internal class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
 {
     private readonly Dictionary<AID, Action?> AidActions;
     private readonly ICodepage Codepage;

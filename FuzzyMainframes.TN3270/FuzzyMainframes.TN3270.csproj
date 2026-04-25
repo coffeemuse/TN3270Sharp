@@ -10,4 +10,8 @@
         <PackageId>FuzzyMainframes.TN3270</PackageId>
     </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="FuzzyMainframes.TN3270.Tests" />
+    </ItemGroup>
+
 </Project>

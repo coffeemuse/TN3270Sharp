@@ -35,7 +35,7 @@ using System.Text;
 
 namespace FuzzyMainframes.TN3270;
 
-public class Telnet : IDisposable
+internal class Telnet : IDisposable
 {
     private readonly ICodepage _codepage;
     private readonly Action<string>? _logger;

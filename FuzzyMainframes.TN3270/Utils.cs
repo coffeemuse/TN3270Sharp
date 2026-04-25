@@ -31,7 +31,7 @@
 
 namespace FuzzyMainframes.TN3270;
 
-public static class Utils
+internal static class Utils
 
 {
     // Adapted from https://github.com/racingmars/go3270/blob/master/util.go

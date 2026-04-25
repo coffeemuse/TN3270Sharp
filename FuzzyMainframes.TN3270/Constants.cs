@@ -32,7 +32,7 @@
 namespace FuzzyMainframes.TN3270;
 
 // 3270 Control Characters
-public enum ControlChars
+internal enum ControlChars
 {
     SF = 0x1d,
     SFE = 0x29,
@@ -84,7 +84,7 @@ public enum AID
 }
 
 [Flags]
-public enum AttribChar
+internal enum AttribChar
 {
     Protected = 0b00100000,
     Unprotected = 0b00000000,

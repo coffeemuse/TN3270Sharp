@@ -162,7 +162,7 @@ public class Screen
     //
     // C#-ification and further changes are Copyright 2022 by Robert J. Lawrence (roblthegreat)
     // licened under the MIT license.
-    public byte[] BuildField(Field fld)
+    internal byte[] BuildField(Field fld)
     {
         List<byte> buffer = [];
         // The Numeric bit doubles as auto-skip on protected fields and as the

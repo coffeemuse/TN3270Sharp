@@ -31,7 +31,7 @@
 
 namespace FuzzyMainframes.TN3270;
 
-public class Response
+internal class Response
 {
     private readonly ICodepage _codepage;
 
