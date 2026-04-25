@@ -59,7 +59,14 @@ public class Field
     public bool Hidden { get; set; }
 
     // NumericOnly indicates if the client only accepts numeric input.
+    // Only meaningful on writeable fields; ignored on protected fields.
     public bool NumericOnly { get; set; }
+
+    // Autoskip causes the cursor to skip past this protected field when
+    // tabbing through the screen. Only meaningful on protected fields;
+    // ignored on writeable fields. Implemented as the 3270 Protected+Numeric
+    // attribute combination, which the terminal treats as auto-skip.
+    public bool Autoskip { get; set; }
 
     // Color is the field color. The default value is the default color.
     public Colors Color { get; set; }

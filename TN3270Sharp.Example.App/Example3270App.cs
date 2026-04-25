@@ -165,7 +165,7 @@ namespace TN3270Sharp.Example.App
             FormScreen.AddInput(7,20,"password", true);
             FormScreen.AddEOF(7, 41);
             FormScreen.AddText(8, 1, "Employee ID . .");
-            FormScreen.AddInput(8, 20, "employeeId", numericonly: true);
+            FormScreen.AddInput(8, 20, "employeeId", numericOnly: true);
             FormScreen.AddEOF(8, 41);
             FormScreen.AddText(9,1,"Press");
             FormScreen.AddText(9,7,"ENTER", true);
