@@ -33,22 +33,18 @@ namespace TN3270Sharp;
 
 public interface ITn3270ConnectionHandler
 {
-    // ---------------------------------------------------------------
-    //byte[] GetBufferBytes();
-    //int GetTotalBytesReadFromBuffer();
+    /// <summary>
+    ///     Render <paramref name="screen" /> to the terminal and, unless
+    ///     <see cref="ScreenOpts.NoResponse" /> is set, block until the user
+    ///     presses an AID key. See <see cref="ScreenOpts" /> for the
+    ///     individual knobs (cursor placement, callbacks, no-response sends,
+    ///     etc.). Passing <c>null</c> uses the default options, which match
+    ///     the most common case: blocking read with predefined AID handlers
+    ///     enabled.
+    /// </summary>
+    void ShowScreen(Screen screen, ScreenOpts? opts = null);
 
-    // ---------------------------------------------------------------
-    void ShowScreen(Screen screen);
-    void ShowScreen(Screen screen, bool executePredefinedAidActions);
-    void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction);
-    void ShowScreen(Screen screen, bool executePredefinedAidActions, Action<AID>? screenBufferProcess);
-
-    void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction,
-        Action<AID>? screenBufferProcess);
-
-    // ---------------------------------------------------------------
     void SetAidAction(AID aidCommand, Action action);
 
-    // ---------------------------------------------------------------
     void CloseConnection();
 }

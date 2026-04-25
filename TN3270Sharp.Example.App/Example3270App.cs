@@ -80,15 +80,15 @@ public class Example3270App
                         if (!string.IsNullOrWhiteSpace(errorMessage))
                         {
                             screens[ProgramScreen.FormScreen].SetFieldValue("errormsg", errorMessage);
-                            tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen], true,
-                                formScreenAction);
+                            tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen],
+                                new ScreenOpts { ScreenBufferProcess = formScreenAction });
                         }
                         else
                         {
                             screens[ProgramScreen.FormScreenInside].SetFieldValue("fname", fName!);
                             screens[ProgramScreen.FormScreenInside].SetFieldValue("lname", lName!);
-                            tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreenInside], true,
-                                formScreenInsideAction);
+                            tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreenInside],
+                                new ScreenOpts { ScreenBufferProcess = formScreenInsideAction });
                         }
                     }
                 };
@@ -96,16 +96,19 @@ public class Example3270App
                 formScreenInsideAction = aidReceived =>
                 {
                     if (aidReceived == AID.Enter)
-                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen], true,
-                            () =>
+                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen],
+                            new ScreenOpts
                             {
-                                screens[ProgramScreen.FormScreen].ClearFieldValue("fname");
-                                screens[ProgramScreen.FormScreen].ClearFieldValue("lname");
-                                screens[ProgramScreen.FormScreen].ClearFieldValue("password");
-                                screens[ProgramScreen.FormScreen].ClearFieldValue("employeeId");
-                                screens[ProgramScreen.FormScreen].ClearFieldValue("errormsg");
-                            },
-                            formScreenAction);
+                                BeforeScreenRenderAction = () =>
+                                {
+                                    screens[ProgramScreen.FormScreen].ClearFieldValue("fname");
+                                    screens[ProgramScreen.FormScreen].ClearFieldValue("lname");
+                                    screens[ProgramScreen.FormScreen].ClearFieldValue("password");
+                                    screens[ProgramScreen.FormScreen].ClearFieldValue("employeeId");
+                                    screens[ProgramScreen.FormScreen].ClearFieldValue("errormsg");
+                                },
+                                ScreenBufferProcess = formScreenAction
+                            });
                     ;
                 };
 
@@ -113,21 +116,24 @@ public class Example3270App
                 tn3270ConnectionHandler.SetAidAction(AID.PF4,
                     () =>
                     {
-                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.ColorScreen], true, formScreenAction);
+                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.ColorScreen],
+                            new ScreenOpts { ScreenBufferProcess = formScreenAction });
                     });
                 tn3270ConnectionHandler.SetAidAction(AID.PF5,
                     () =>
                     {
-                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.HighlightScreen], true,
-                            formScreenAction);
+                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.HighlightScreen],
+                            new ScreenOpts { ScreenBufferProcess = formScreenAction });
                     });
                 tn3270ConnectionHandler.SetAidAction(AID.PF6,
                     () =>
                     {
-                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen], true, formScreenAction);
+                        tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen],
+                            new ScreenOpts { ScreenBufferProcess = formScreenAction });
                     });
 
-                tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen], true, formScreenAction);
+                tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen],
+                    new ScreenOpts { ScreenBufferProcess = formScreenAction });
 
                 //tn3270ConnectionHandler.ShowScreen(screens[ProgramScreen.FormScreen], true, (aidReceived) =>
                 //{

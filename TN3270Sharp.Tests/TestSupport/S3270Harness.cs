@@ -131,12 +131,38 @@ internal sealed class S3270Harness : IDisposable
             if (line.StartsWith("data: ", StringComparison.Ordinal))
                 dataLines.Add(line.Substring("data: ".Length));
             else
+            {
                 statusLine = line;
+                LastStatusLine = line;
+            }
         }
     }
 
     public string AsciiRow(int row) =>
         Send($"Ascii({row - 1},0,80)").FirstOrDefault() ?? string.Empty;
+
+    /// <summary>The most recent s3270 status line. s3270 emits one of these
+    /// just before <c>ok</c>/<c>error</c> on every action. Format (space-
+    /// separated): keyboard-state screen-formatting field-protection
+    /// connection-state emulator-mode model rows cols cursor-row cursor-col
+    /// window-id execution-time. cursor-row/cursor-col are 0-based.</summary>
+    public string? LastStatusLine { get; private set; }
+
+    /// <summary>1-based <c>(row, col)</c> cursor position decoded from
+    /// <see cref="LastStatusLine" />, or <c>null</c> if no command has run yet
+    /// or the status line is unparseable.</summary>
+    public (int row, int col)? Cursor
+    {
+        get
+        {
+            if (LastStatusLine == null) return null;
+            var parts = LastStatusLine.Split(' ');
+            if (parts.Length < 10) return null;
+            if (!int.TryParse(parts[8], out var row)) return null;
+            if (!int.TryParse(parts[9], out var col)) return null;
+            return (row + 1, col + 1);
+        }
+    }
 
     public void Dispose()
     {

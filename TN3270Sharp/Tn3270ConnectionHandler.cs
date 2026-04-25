@@ -54,27 +54,19 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
         Telnet.Dispose();
     }
 
-    //public byte[] GetBufferBytes() => BufferBytes;
-    //public int GetTotalBytesReadFromBuffer() => TotalBytesReadFromBuffer;
-
-    public void ShowScreen(Screen screen)
-        => ShowScreen(screen, true, null, null);
-
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions)
-        => ShowScreen(screen, executePredefinedAidActions, null, null);
-
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction)
-        => ShowScreen(screen, executePredefinedAidActions, beforeScreenRenderAction, null);
-
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action<AID>? screenBufferProcess)
-        => ShowScreen(screen, executePredefinedAidActions, null, screenBufferProcess);
-
-    public void ShowScreen(Screen screen, bool executePredefinedAidActions, Action? beforeScreenRenderAction,
-        Action<AID>? screenBufferProcess)
+    public void ShowScreen(Screen screen, ScreenOpts? opts = null)
     {
-        beforeScreenRenderAction?.Invoke();
+        opts ??= new ScreenOpts();
 
-        Telnet.SendScreen(screen);
+        opts.BeforeScreenRenderAction?.Invoke();
+
+        var (cursorRow, cursorCol) = ResolveCursor(screen, opts);
+        Telnet.SendScreen(screen, cursorRow, cursorCol);
+
+        opts.PostSendCallback?.Invoke(opts.CallbackData);
+
+        if (opts.NoResponse)
+            return;
 
         try
         {
@@ -82,12 +74,14 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
             {
                 var recvdAID = (AID)bufferBytes[0];
 
-                if (executePredefinedAidActions && AidActions.TryGetValue(recvdAID, out var action)) action?.Invoke();
+                if (opts.ExecutePredefinedAidActions
+                    && AidActions.TryGetValue(recvdAID, out var action))
+                    action?.Invoke();
 
                 var response = new Response(bufferBytes, Codepage);
                 response.ParseFieldsScreen(screen);
 
-                screenBufferProcess?.Invoke(recvdAID);
+                opts.ScreenBufferProcess?.Invoke(recvdAID);
             });
         }
         catch (Exception ex)
@@ -95,6 +89,16 @@ public class Tn3270ConnectionHandler : ITn3270ConnectionHandler, IDisposable
             Console.WriteLine(ex.Message);
             CloseConnection();
         }
+    }
+
+    // 0 in CursorRow/CursorCol is the "unset" sentinel — 0 is unambiguously
+    // invalid in the project's 1-based coord system, so it doubles as
+    // "fall back to Screen.InitialCursorPosition".
+    private static (int row, int col) ResolveCursor(Screen screen, ScreenOpts opts)
+    {
+        var row = opts.CursorRow > 0 ? opts.CursorRow : screen.InitialCursorPosition.row;
+        var col = opts.CursorCol > 0 ? opts.CursorCol : screen.InitialCursorPosition.column;
+        return (row, col);
     }
 
     public void SetAidAction(AID aidCommand, Action action)

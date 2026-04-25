@@ -52,7 +52,7 @@ public class S3270SmokeTests
                     screen.AddInput(3, 4, 20, "echo");
 
                     handler.SetAidAction(AID.PF3, handler.CloseConnection);
-                    handler.ShowScreen(screen, executePredefinedAidActions: true);
+                    handler.ShowScreen(screen);
 
                     handlerCompleted.Set();
                 });
