@@ -71,7 +71,7 @@ public class ResponseParseTests
         var resp = new Response(buffer, Cp);
         resp.ParseFieldsScreen(screen);
 
-        Assert.Equal(AID.Enter, resp.ActionID);
+        Assert.Equal(AID.Enter, resp.ActionId);
         Assert.Equal("Robert", screen.GetFieldData("name"));
     }
 
@@ -116,7 +116,7 @@ public class ResponseParseTests
 
         var resp = new Response(buffer, Cp);
         // No fields to parse — just verify cursor.
-        Assert.Equal(AID.PF3, resp.ActionID);
+        Assert.Equal(AID.PF3, resp.ActionId);
         Assert.Equal(12, resp.Row);
         Assert.Equal(40, resp.Column);
     }
@@ -163,7 +163,7 @@ public class ResponseParseTests
         // Some PA / Clear variants ship just the AID byte. ReadCursorPosition
         // should bail without indexing past the end.
         var resp = new Response(new byte[] { (byte)AID.Clear }, Cp);
-        Assert.Equal(AID.Clear, resp.ActionID);
+        Assert.Equal(AID.Clear, resp.ActionId);
         Assert.Equal(0, resp.Row);
         Assert.Equal(0, resp.Column);
     }

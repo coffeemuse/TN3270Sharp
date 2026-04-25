@@ -124,12 +124,12 @@ public class ScreenBuildFieldTests
     public void ColorOnly_EmitsSfeWithColorParam()
     {
         var screen = NewScreen();
-        var field = new Field(1, 1) { Write = false, Color = Colors.Red };
+        var field = new Field(1, 1) { Write = false, Color = Color.Red };
 
         var bytes = screen.BuildField(field);
 
         Assert.Equal(
-            new byte[] { SFE, 0x02, BasicFieldAttrMarker, 0x20, ColorMarker, (byte)Colors.Red },
+            new byte[] { SFE, 0x02, BasicFieldAttrMarker, 0x20, ColorMarker, (byte)Color.Red },
             bytes);
     }
 
@@ -153,7 +153,7 @@ public class ScreenBuildFieldTests
         var field = new Field(1, 1)
         {
             Write = true,
-            Color = Colors.Yellow,
+            Color = Color.Yellow,
             Highlighting = Highlight.Blink
         };
 
@@ -167,7 +167,7 @@ public class ScreenBuildFieldTests
                 SFE, 0x03,
                 BasicFieldAttrMarker, 0x00,
                 HighlightMarker, (byte)Highlight.Blink,
-                ColorMarker, (byte)Colors.Yellow
+                ColorMarker, (byte)Color.Yellow
             },
             bytes);
     }
@@ -178,12 +178,12 @@ public class ScreenBuildFieldTests
         // The numericBit gating must apply uniformly to both SF and SFE branches.
         // Writeable + NumericOnly + Color → SFE with attrByte = 0x10.
         var screen = NewScreen();
-        var field = new Field(1, 1) { Write = true, NumericOnly = true, Color = Colors.Green };
+        var field = new Field(1, 1) { Write = true, NumericOnly = true, Color = Color.Green };
 
         var bytes = screen.BuildField(field);
 
         Assert.Equal(
-            new byte[] { SFE, 0x02, BasicFieldAttrMarker, 0x10, ColorMarker, (byte)Colors.Green },
+            new byte[] { SFE, 0x02, BasicFieldAttrMarker, 0x10, ColorMarker, (byte)Color.Green },
             bytes);
     }
 }

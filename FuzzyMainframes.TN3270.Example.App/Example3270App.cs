@@ -179,7 +179,7 @@ public class Example3270App
         FormScreen.AddText(9, 1, "Press");
         FormScreen.AddText(9, 7, "ENTER", true);
         FormScreen.AddText(9, 13, "to submit your name.");
-        FormScreen.AddText(11, 1, "errormsg", "", true, Colors.Red);
+        FormScreen.AddText(11, 1, "errormsg", "", true, Color.Red);
         //FormScreen.AddInput(12, 40, 1, "test");
         //FormScreen.AddEOF(12, 41);
         FormScreen.AddText(23, 1, PFKeys);
@@ -194,7 +194,7 @@ public class Example3270App
             new() { Row = 5, Column = 20, Name = "fname" },
             new() { Row = 6, Column = 1, Contents = "And your last name is" },
             new() { Row = 6, Column = 23, Name = "lname" },
-            new() { Row = 11, Column = 1, Intensity = true, Color = Colors.Red, Name = "errormsg" },
+            new() { Row = 11, Column = 1, Intensity = true, Color = Color.Red, Name = "errormsg" },
             new() { Row = 23, Column = 1, Contents = PFKeys }
         };
 
@@ -217,14 +217,14 @@ public class Example3270App
         {
             new() { Row = 1, Column = 28, Contents = "3270 Example Application", Intensity = true },
             new() { Row = 3, Column = 31, Contents = "TN3270 Color Demo" },
-            new() { Row = 7, Column = 10, Contents = "Default", Color = Colors.DefaultColor },
-            new() { Row = 8, Column = 10, Contents = "Blue", Color = Colors.Blue },
-            new() { Row = 9, Column = 10, Contents = "Green", Color = Colors.Green },
-            new() { Row = 10, Column = 10, Contents = "Pink", Color = Colors.Pink },
-            new() { Row = 11, Column = 10, Contents = "Red", Color = Colors.Red },
-            new() { Row = 12, Column = 10, Contents = "Turquoise", Color = Colors.Turquoise },
-            new() { Row = 13, Column = 10, Contents = "White", Color = Colors.White },
-            new() { Row = 14, Column = 10, Contents = "Yellow", Color = Colors.Yellow },
+            new() { Row = 7, Column = 10, Contents = "Default", Color = Color.DefaultColor },
+            new() { Row = 8, Column = 10, Contents = "Blue", Color = Color.Blue },
+            new() { Row = 9, Column = 10, Contents = "Green", Color = Color.Green },
+            new() { Row = 10, Column = 10, Contents = "Pink", Color = Color.Pink },
+            new() { Row = 11, Column = 10, Contents = "Red", Color = Color.Red },
+            new() { Row = 12, Column = 10, Contents = "Turquoise", Color = Color.Turquoise },
+            new() { Row = 13, Column = 10, Contents = "White", Color = Color.White },
+            new() { Row = 14, Column = 10, Contents = "Yellow", Color = Color.Yellow },
             new() { Row = 23, Column = 1, Contents = PFKeys }
         };
 

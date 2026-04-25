@@ -42,8 +42,8 @@ internal enum ControlChars
     PT = 0x05,
     RA = 0x3c,
     EUA = 0x12,
-    WCCdefault = 0xc3,
-    WCCnoReset = 0xc2,
+    WccDefault = 0xc3,
+    WccNoReset = 0xc2,
     EraseWrite = 0xf5,
     Write = 0xf1
 }
@@ -155,7 +155,7 @@ public enum AID
 }
 
 [Flags]
-internal enum AttribChar
+internal enum FieldAttributes
 {
     Protected = 0b00100000,
     Unprotected = 0b00000000,

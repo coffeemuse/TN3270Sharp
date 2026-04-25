@@ -205,12 +205,12 @@ internal class Telnet : IDisposable
         if (noClear)
         {
             DataStream.Write(Stream);
-            WriteToStream((byte)ControlChars.WCCnoReset);
+            WriteToStream((byte)ControlChars.WccNoReset);
         }
         else
         {
             DataStream.EraseWrite(Stream);
-            WriteToStream((byte)ControlChars.WCCdefault);
+            WriteToStream((byte)ControlChars.WccDefault);
         }
 
         foreach (var fld in screen.Fields)

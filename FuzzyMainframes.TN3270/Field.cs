@@ -34,7 +34,7 @@ namespace FuzzyMainframes.TN3270;
 /// <summary>
 ///     A single 3270 field on a <see cref="Screen" /> — a <c>(Row, Column)</c>
 ///     attribute-byte position plus the visible/editable area that follows it
-///     until the next attribute byte. Use <see cref="Screen.AddText(int, int, string, bool, Colors, Highlight)" />
+///     until the next attribute byte. Use <see cref="Screen.AddText(int, int, string, bool, Color, Highlight)" />
 ///     and <see cref="Screen.AddInput(int, int, string, bool, bool, bool, bool)" />
 ///     for typical construction.
 /// </summary>
@@ -128,10 +128,10 @@ public class Field
     public bool Autoskip { get; set; }
 
     /// <summary>
-    ///     Foreground color for the field. <see cref="Colors.DefaultColor" />
+    ///     Foreground color for the field. <see cref="Color.DefaultColor" />
     ///     leaves color selection to the terminal's defaults.
     /// </summary>
-    public Colors Color { get; set; }
+    public Color Color { get; set; }
 
     /// <summary>
     ///     Highlight attribute for the field. <see cref="Highlight.DefaultHighlight" />
@@ -153,7 +153,7 @@ public class Field
 ///     terminal's color rules; the named values map to the standard 3270
 ///     extended-color attribute bytes.
 /// </summary>
-public enum Colors
+public enum Color
 {
     /// <summary>Terminal default color (no extended-color attribute emitted).</summary>
     DefaultColor = 0,

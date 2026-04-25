@@ -44,7 +44,7 @@ internal class Response
         ReadCursorPosition();
     }
 
-    public AID ActionID { get; set; }
+    public AID ActionId { get; set; }
 
     /// <summary>1-based row of the cursor at the time the AID key was pressed.</summary>
     public int Row { get; set; }
@@ -52,12 +52,11 @@ internal class Response
     /// <summary>1-based column of the cursor at the time the AID key was pressed.</summary>
     public int Column { get; set; }
 
-    public Dictionary<byte[], string> Map { get; set; } = new();
     public byte[] BufferBytes { get; }
 
     private void ReadAction()
     {
-        ActionID = (AID)BufferBytes[0];
+        ActionId = (AID)BufferBytes[0];
     }
 
     private void ReadCursorPosition()

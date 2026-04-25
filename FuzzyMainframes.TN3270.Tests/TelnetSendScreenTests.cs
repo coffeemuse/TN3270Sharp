@@ -41,7 +41,7 @@ public class TelnetSendScreenTests
     {
         // Empty screen makes the byte sequence trivial:
         //   0xf5  EraseWrite
-        //   0xc3  WCCdefault (reset MDT, restore keyboard)
+        //   0xc3  WccDefault (reset MDT, restore keyboard)
         //   0x11  SBA
         //   XX XX buffer address for cursor (5,8)
         //   0x13  IC
@@ -67,7 +67,7 @@ public class TelnetSendScreenTests
     {
         // Empty screen + noClear:
         //   0xf1  Write
-        //   0xc2  WCCnoReset (preserve MDT, restore keyboard)
+        //   0xc2  WccNoReset (preserve MDT, restore keyboard)
         //   0xff  IAC
         //   0xef  EOR
         // No SBA/IC trailer — cursor stays where the user left it.

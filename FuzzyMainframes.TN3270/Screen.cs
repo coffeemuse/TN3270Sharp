@@ -40,7 +40,7 @@ namespace FuzzyMainframes.TN3270;
 /// <summary>
 ///     UI model for one 3270 screen: an ordered list of <see cref="Field" />
 ///     elements plus the initial cursor position. Built up via
-///     <see cref="AddText(int, int, string, bool, Colors, Highlight)" />,
+///     <see cref="AddText(int, int, string, bool, Color, Highlight)" />,
 ///     <see cref="AddInput(int, int, string, bool, bool, bool, bool)" />, and
 ///     <see cref="AddEOF" /> helpers, then handed to
 ///     <see cref="ITn3270ConnectionHandler.ShowScreen" />.
@@ -93,10 +93,10 @@ public class Screen
     /// <param name="name">Optional name; pass <see cref="string.Empty" /> for unnamed display labels.</param>
     /// <param name="contents">Text to display.</param>
     /// <param name="intensity">When true, render the text with high intensity.</param>
-    /// <param name="color">Foreground color; <see cref="Colors.DefaultColor" /> defers to the terminal.</param>
+    /// <param name="color">Foreground color; <see cref="Color.DefaultColor" /> defers to the terminal.</param>
     /// <param name="highlighting">Highlight attribute (blink, reverse video, underscore).</param>
     public void AddText(int row, int column, string name, string contents, bool intensity = false,
-        Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
+        Color color = Color.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
     {
         Fields.Add(new Field
         {
@@ -120,10 +120,10 @@ public class Screen
     /// </param>
     /// <param name="contents">Text to display.</param>
     /// <param name="intensity">When true, render the text with high intensity.</param>
-    /// <param name="color">Foreground color; <see cref="Colors.DefaultColor" /> defers to the terminal.</param>
+    /// <param name="color">Foreground color; <see cref="Color.DefaultColor" /> defers to the terminal.</param>
     /// <param name="highlighting">Highlight attribute (blink, reverse video, underscore).</param>
     public void AddText(int row, int column, string contents, bool intensity = false,
-        Colors color = Colors.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
+        Color color = Color.DefaultColor, Highlight highlighting = Highlight.DefaultHighlight)
     {
         AddText(row, column, string.Empty, contents, intensity, color, highlighting);
     }
@@ -221,15 +221,15 @@ public class Screen
         // on opposite values of Write and never collide.
         var numericBit = (fld.Write && fld.NumericOnly) || (!fld.Write && fld.Autoskip);
 
-        if (fld.Color == Colors.DefaultColor && fld.Highlighting == Highlight.DefaultHighlight)
+        if (fld.Color == Color.DefaultColor && fld.Highlighting == Highlight.DefaultHighlight)
         {
             // We can use a simple SF
             buffer.Add((byte)ControlChars.SF);
             buffer.Add((byte)(
-                (fld.Write ? AttribChar.Unprotected : AttribChar.Protected) |
-                (numericBit ? AttribChar.Numeric : AttribChar.Alpha) |
-                (fld.Intensity ? AttribChar.Intensity : AttribChar.Normal) |
-                (fld.Hidden ? AttribChar.Hidden : AttribChar.Normal)
+                (fld.Write ? FieldAttributes.Unprotected : FieldAttributes.Protected) |
+                (numericBit ? FieldAttributes.Numeric : FieldAttributes.Alpha) |
+                (fld.Intensity ? FieldAttributes.Intensity : FieldAttributes.Normal) |
+                (fld.Hidden ? FieldAttributes.Hidden : FieldAttributes.Normal)
             ));
             return buffer.ToArray();
         }
@@ -238,7 +238,7 @@ public class Screen
         buffer.Add((byte)ControlChars.SFE);
         var paramCount = 1;
 
-        if (fld.Color != Colors.DefaultColor)
+        if (fld.Color != Color.DefaultColor)
             paramCount++;
 
         if (fld.Highlighting != Highlight.DefaultHighlight)
@@ -249,10 +249,10 @@ public class Screen
         // Basic field attribute
         buffer.Add(0xc0);
         buffer.Add((byte)(
-            (fld.Write ? AttribChar.Unprotected : AttribChar.Protected) |
-            (numericBit ? AttribChar.Numeric : AttribChar.Alpha) |
-            (fld.Intensity ? AttribChar.Intensity : AttribChar.Normal) |
-            (fld.Hidden ? AttribChar.Hidden : AttribChar.Normal)
+            (fld.Write ? FieldAttributes.Unprotected : FieldAttributes.Protected) |
+            (numericBit ? FieldAttributes.Numeric : FieldAttributes.Alpha) |
+            (fld.Intensity ? FieldAttributes.Intensity : FieldAttributes.Normal) |
+            (fld.Hidden ? FieldAttributes.Hidden : FieldAttributes.Normal)
         ));
 
         // Highlighting Attribute
@@ -263,7 +263,7 @@ public class Screen
         }
 
         // Color attribute
-        if (fld.Color != Colors.DefaultColor)
+        if (fld.Color != Color.DefaultColor)
         {
             buffer.Add(0x42);
             buffer.Add((byte)fld.Color);
