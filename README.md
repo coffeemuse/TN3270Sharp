@@ -1,8 +1,8 @@
 [![.NET](https://github.com/FuzzyMainframes/TN3270Sharp/actions/workflows/dotnet.yml/badge.svg)](https://github.com/FuzzyMainframes/TN3270Sharp/actions/workflows/dotnet.yml)
 
-# TN3270Sharp - 3270 Server Library for .NET
+# FuzzyMainframes.TN3270 - 3270 Server Library for .NET
 
-TN3270Sharp a .NET library to write applications/servers with C# that use TN3270 clients
+FuzzyMainframes.TN3270 a .NET library to write applications/servers with C# that use TN3270 clients
 
 ## Inspiration
 
@@ -17,12 +17,12 @@ This project is still very early in development and is **not suitable** for use 
 ## Behavior notes
 
 - **Default EBCDIC code page is `IBM01047` (CP1047).** Earlier versions defaulted to `IBM037` (CP037). If you need the old behavior, construct the server with the encoding name explicitly: `new Tn3270Server("0.0.0.0", 3270, "IBM037")`. The encoding is now per-connection rather than process-global, so multiple servers (or multiple `Tn3270Server` instances on different ports) can use different code pages without interfering.
-- **Field response values are trimmed by default.** When the terminal sends a response, the 3270 buffer pads each writeable field to its full length with spaces; TN3270Sharp strips leading and trailing whitespace before exposing the value via `Field.Contents` / `Screen.GetFieldData`. Set `Field.KeepSpaces = true` on a field to receive its value verbatim. This is a behavioral change from earlier versions, which returned the raw padded value.
+- **Field response values are trimmed by default.** When the terminal sends a response, the 3270 buffer pads each writeable field to its full length with spaces; FuzzyMainframes.TN3270 strips leading and trailing whitespace before exposing the value via `Field.Contents` / `Screen.GetFieldData`. Set `Field.KeepSpaces = true` on a field to receive its value verbatim. This is a behavioral change from earlier versions, which returned the raw padded value.
 - **Row and column coordinates are 1-based** with `(1, 1)` representing the upper-left corner of the screen. This matches what TN3270 emulators report in their status bars.
 
 ## License
 
-TN3270Sharp is licensed under the MIT License which permits commercial use; modification; distribution, and private use.
+FuzzyMainframes.TN3270 is licensed under the MIT License which permits commercial use; modification; distribution, and private use.
 
 ## Requirements
 
@@ -40,7 +40,7 @@ This includes:
 - Type the following in the shell
 
 ```bash
-cd TN3270Sharp.Example.App
+cd FuzzyMainframes.TN3270.Example.App
 dotnet run
 ```
 
